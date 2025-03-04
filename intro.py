@@ -10,15 +10,15 @@ st.title("Analisi dell'effetto k-nn per reperimento di documenti rilevanti")
 
 st.write("""
 
-In Information retrieval uno degli aspetti piu\` ricercati sono i metodi per reperire il maggior numero di pagine rilevanti a una richiesta e che queste vengano posizionate all'inizio dei risultati restituti.
+In Information retrieval uno degli aspetti piu` ricercati sono i metodi per reperire il maggior numero di pagine rilevanti a una richiesta e che queste vengano posizionate all'inizio dei risultati restituti.
 
 La funzione di riperimento confronta i descrittori presenti nella query con i descrittori dei documenti. A ogni documento viene poi assegnato un punteggio in base al peso dei singoli descrittori. 
 Importante considerare che un documento con alto punteggio non garantisce che sia rilevante e viceversa. 
 
-Per migliorare il reperimento e\` possibile usare diversi metodi, nel nostro caso aggiungeremo dei descrittori alla query iniziale, facendo quindi query expansion (da qui in avanti QE),  derivati dalla vicinanza rispetto altri documenti usando k-nn.         
+Per migliorare il reperimento e` possibile usare diversi metodi, nel nostro caso aggiungeremo dei descrittori alla query iniziale, facendo quindi query expansion (da qui in avanti QE),  derivati dalla vicinanza rispetto altri documenti usando k-nn.         
 
 ### Obiettivi del Progetto
-Questo progetto mostrera\` le differenze tra il bm25 senza QE e un possibile uso e implementazione del metodo di clustering k nearest neighbours con QE, usando un dataset creato usando Elasticseach come motore di ricerca e trec_eval per fare le valutazioni sulle performance del metodo utilizzato.
+Questo progetto mostrera` le differenze tra il bm25 senza QE e un possibile uso e implementazione del metodo di clustering k nearest neighbours con QE, usando un dataset creato usando Elasticseach come motore di ricerca e trec_eval per fare le valutazioni sulle performance del metodo utilizzato.
          
 Il progetto si suddivide in tre parti:
 
@@ -36,7 +36,7 @@ Per visitare le varie sezioni, aprire il menù sulla sinistra.
 ### Importanza del Progetto
 
 I motori di ricerca non sono importanti solo per trovare pagine internet ma servono anche a trovare brevetti, e tanto altro...
-L'importanza di trovare e portare in alto i documenti rilevanti e\` alla base di IR, e se il metodo non e\` particolarmente computazionalmente oneroso implementarlo in una motore di ricerca che migliora i risultati fa solo che bene.
+L'importanza di trovare e portare in alto i documenti rilevanti e` alla base di IR, e se il metodo non e` particolarmente computazionalmente oneroso implementarlo in una motore di ricerca che migliora i risultati fa solo che bene.
 
 **Fonti Utilizzate**:
 - (Lee, K. S., Croft, W. B., & Allan, J. (2008, July)). [_A cluster-based resampling method for pseudo-relevance feedback._]
