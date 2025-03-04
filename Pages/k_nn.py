@@ -243,44 +243,90 @@ Prima pero vediamo come si comportano le query singolarmente.
 
 
 
-st.title("Performance delle singole query P@5")
-st.text("""
-				Valutiamo come le singole query vengono influenzate dall\'uso dei vari metodi e dai parametri usati""")
+st.title("Modello che massimizza P@5")
+st.markdown("""Prendiamo in analisi il modello che massimizza la metrica P@5, ovvero quello con parametri $lambda = 0.9$, $e = 100$ ed $N$ = 10. 
+
+Valutiamo come le singole query vengono influenzate dall'uso di questo modello e quali migliorano o peggiorano""")
 
 
 querybm25 = pl.read_csv("./Data/Eval_Queries/bm25_evalQ.txt", has_header= True)
-
-query07 = pl.read_csv("./Data/Eval_Queries/10_25_07_evalQ.txt", has_header= True)
 query09 = pl.read_csv("./Data/Eval_Queries/10_100_09_evalQ.txt", has_header= True)
 # Creare il grafico per p5~query
 
 
-min_x = st.slider("Min x", min_value=600, max_value = 700, value = 1)
-max_x = st.slider("Max x", min_value=600, max_value = 700, value = 1)
+selected_x = st.slider("Seleziona il valore di query per p@5", min_value=600, max_value=700, value=(600, 700))
+filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25['id_Q'] <= selected_x[1]))
+filtered_09 = query09.filter((query09['id_Q'] >= selected_x[0]) & (query09['id_Q'] <= selected_x[1]))
 
 
-chart_bm25 = alt.Chart(querybm25[(querybm25['id_Q'] >= min_x) & (querybm25['id_Q'] <= max_x)]).mark_line(color = '#FF0000', filled = False).encode(
-  	x=alt.X('id_Q', scale=alt.Scale(domain=[600, 700])),  # Impostazione dei limiti per l'asse x
-    y='p_5'
+
+chart_bm = alt.Chart(filtered_bm).mark_point(color = '#FF6347', filled = True).encode(
+  	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
+    y='p_5', 
+		color = "method"
 )
 
-
-
-#chart_07 = alt.Chart(query07).mark_line(color = '#00FF00', filled = False).encode(
-#  	x=alt.X('id_Q', scale=alt.Scale(domain=[600, 700])),  # Impostazione dei limiti per l'asse x
-#    y='p_5'
-#)
-#
-#chart_09 = alt.Chart(query09).mark_line(color = '#0000FF ', filled = False).encode(
-#  	x=alt.X('id_Q', scale=alt.Scale(domain=[600, 700])),  # Impostazione dei limiti per l'asse x
-#    y='p_5'
-#)
-
-
- 
+chart_09 = alt.Chart(filtered_09).mark_point(color = '#32CD32', filled = True).encode(
+  	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
+    y='p_5',
+		color = "method"
+)
 
 # Visualizzare il grafico
-st.altair_chart(chart_bm25, use_container_width= True)
+st.altair_chart(chart_bm+chart_09, use_container_width= True)
 
 st.text("""
-Il grafico non e molto suggestivo, pero possiamo notare che alcune query rimangono invariate, altre invece cambiano sensibilmente""" )
+Il grafico non e molto suggestivo, pero possiamo notare che alcune query rimangono invariate, altre invece cambiano sensibilmente.
+""" )
+
+st.markdown(f"""### Prendiamo per esempio le seguenti query:
+- 622: "Price Fixing" con un P@5 senzas QE di {querybm25[21,1]} mentre usando QE otteniamo {query09[21,1]}. Il nostro meteodo ha funzionato egregiamente, anche se questo e` un caso di esempio dove viene massimizzata la differenza.
+- 626: "Human Stampede" con P@5 senza QE di {querybm25[25,1]}, mentre usando QE P@5 diventa di {query09[25,1]}. Ovvero viene dimezzata la precisione. 
+
+""")
+
+
+
+st.title("Modello che massimizza Map")
+st.markdown("""Prendiamo in analisi il modello che massimizza la metrica map, ovvero quello con parametri $lambda = 0.7$, $e = 25$ ed $N$ = 10. 
+
+Valutiamo come le singole query vengono influenzate dall'uso di questo modello e quali migliorano o peggiorano""")
+
+
+query07 = pl.read_csv("./Data/Eval_Queries/10_25_07_evalQ.txt", has_header= True)
+# Creare il grafico per p5~query
+
+
+selected_x = st.slider("Seleziona il valore di query per map", min_value=600, max_value=700, value=(600, 700))
+filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25['id_Q'] <= selected_x[1]))
+filtered_07 = query07.filter((query07['id_Q'] >= selected_x[0]) & (query07['id_Q'] <= selected_x[1]))
+
+
+
+chart_bm = alt.Chart(filtered_bm).mark_point(color = '#FF6347', filled = True).encode(
+  	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
+    y='map', 
+		color = "method"
+)
+
+chart_07 = alt.Chart(filtered_07).mark_point(color = '#32CD32', filled = True).encode(
+  	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
+    y='map',
+		color = "method"
+)
+
+# Visualizzare il grafico
+st.altair_chart(chart_bm+chart_07, use_container_width= True)
+
+st.text("""
+Il grafico non e molto suggestivo, pero possiamo notare che alcune query rimangono invariate, altre invece cambiano sensibilmente.
+""" )
+
+st.markdown(f"""### Prendiamo per esempio le seguenti query:
+- 607: "Human genetic code" con un map senzas QE di {querybm25[6,2]} mentre usando QE otteniamo {query09[6,2]}. Il nostro meteodo ha funzionato egregiamente, anche se questo e` un caso di esempio dove viene massimizzata la differenza.
+- 626: "Human Stampede" con map senza QE di {querybm25[25,2]}, mentre usando QE mapdiventa di {query09[25,2]}. meno della meta della precisione. 
+
+""")
+
+
+st.markdown("""Si possono fare ulteriori considerazioni sul perche' alcune query hanno funzionato meglio di altre ma non e` l'obbiettivo di questo progetto.""")

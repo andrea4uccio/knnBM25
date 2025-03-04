@@ -1,7 +1,7 @@
 import polars as pl
 
 # Funzione per rendere i dati tidy
-def clean(filename):
+def clean(filename, method):
   dati = pl.read_csv(filename, separator="\t")
    # Filtrare i dati per 'metric_name' che è 'map' o 'P_5'
   dati = dati.filter((pl.col("metric_name").str.starts_with("map"))| (pl.col("metric_name").str.starts_with("P_5 ")))
@@ -14,18 +14,19 @@ def clean(filename):
   result = pl.DataFrame({
       "id_Q": p_5_data[:, 1],  # La seconda colonna di p_5
       "p_5": p_5_data[:, 2],   # La terza colonna di p_5
-      "map": map_data[:, 2]    # La terza colonna di map
+      "map": map_data[:, 2], 
+      "method" : method   # La terza colonna di map
   })
     
   return result
 
 # Scriviamo il nuovo dataset pulito in un file cosi da averlo sempre pronto
 
-tidy = clean("Data/Eval_Queries/test_results_10_25_07_evalQ.txt")
+tidy = clean("Data/Eval_Queries/test_results_10_25_07_evalQ.txt", "10_25_07")
 tidy.write_csv("Data/Eval_Queries/10_25_07_evalQ.txt")
 
-tidy = clean("Data/Eval_Queries/test_results_10_100_09_evalQ.txt")
+tidy = clean("Data/Eval_Queries/test_results_10_100_09_evalQ.txt","10_100_09")
 tidy.write_csv("Data/Eval_Queries/10_100_09_evalQ.txt")
 
-tidy = clean("Data/Eval_Queries/test_results_bm25_evalQ.txt")
+tidy = clean("Data/Eval_Queries/test_results_bm25_evalQ.txt", "BM25")
 tidy.write_csv("Data/Eval_Queries/bm25_evalQ.txt")
