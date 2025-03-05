@@ -41,7 +41,14 @@ Il progetto si suddivide in tre parti:
 3. **Presentazione dei risultati**: 
          - vedremo se le differenze, qualora presenti, tra i vari metodo proposti siano significative oppure no. 
 
-
+La Precision at 5 misura la precisione dei primi 5 documenti restituiti dal motore di ricerca per una determinata query.
+La precisione, in generale, \u00e8 definita come la frazione dei documenti rilevanti tra i documenti recuperati, \u00e8 la percentuale di documenti rilevanti tra i primi 5 risultati restituiti.
+            
+La MAP \u00e8 la media dell'Average Precision (AP) calcolata per ogni query in un dataset. 
+L'Average Precision \u00e8 la media della precisione calcolata per ogni posizione in cui \u00e8 stato trovato un documento rilevante.
+La Precision in un dato punto della lista dei risultati \u00e8 definita come la frazione di documenti pertinenti tra tutti i documenti recuperati fino a quella posizione.
+La Average Precision per una query \u00e8 quindi la media della precisione calcolata per ogni documento rilevante che appare nella lista dei risultati restituiti dal motore di ricerca.
+            
 ## Importanza del Progetto
 
 I motori di ricerca non sono importanti solo per trovare pagine internet ma servono anche a molto altro: 
