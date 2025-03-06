@@ -30,7 +30,7 @@ I dati preprocessati vengono poi caricati usando pl.read_csv()
 - altair : per grafici;
 - polars : per preprocessing e manipolazione dati;
 - streamlit : per la creazione della interfaccia web;
-- scipy : per i test di significativit\u00f2
+- scipy : per i test di significativit&#224;
 
 ## Come Usare il Codice
 
