@@ -2,6 +2,9 @@ import streamlit as st
 import scipy as sci
 import polars as pl
 
+st.set_page_config(
+    page_title="conclusioni"
+)
 
 st.markdown("# Conclusione")
 
