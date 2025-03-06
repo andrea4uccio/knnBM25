@@ -40,7 +40,7 @@ L'utilizzo di **uv** consente di eseguire il codice in modo semplice.
 
    - Clonare la repository sul proprio PC:
      ```bash
-     git clone https://github.com/runifrexp/MxMH.git
+     git clone https://github.com/andrea4uccio/knnBM25.git
      ```
 2. **Esecuzione:**
 
