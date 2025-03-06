@@ -27,10 +27,10 @@ I dati preprocessati vengono poi caricati usando pl.read_csv()
 
 ## Librerie usata
 
-- altair
-- polars
-- streamlit
-- scipy
+- altair : per grafici;
+- polars : per preprocessing e manipolazione dati;
+- streamlit : per la creazione della interfaccia web;
+- scipy : per i test di significativit\u00f2
 
 ## Come Usare il Codice
 
@@ -50,4 +50,4 @@ L'utilizzo di **uv** consente di eseguire il codice in modo semplice.
      ```
 
 ## Analisi
-Nella pagina intro.py viene fornita una introduzione al problema e alcuni riferimenti usati.
+Nella pagina `intro.py` viene fornita una introduzione al problema e alcuni riferimenti usati.
