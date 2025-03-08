@@ -42,7 +42,9 @@ response = esclient.search(index=indexName, query=query_dict, size=10)
 """
 st.code(codice, language='python')
 
+#Recupero dati
 bm25 = pl.read_csv("./Data/Eval_Test/test_results_bm25_eval.txt", has_header= False, separator="\t")
+#Filtro le righe per selezionare solo i risultati map e P@5
 dati = bm25.filter((pl.col("column_1").str.starts_with("map")) | (pl.col("column_1").str.starts_with("P_5 ")))
 
 st.write(f"""
@@ -50,7 +52,6 @@ I risultati sono poi stati strutturati in modo che il programma trec-eval possa 
 Nel nostro caso usiamo solo map e P_5 che corrispondono a:
 - map = {dati[0, 2]}
 - P_5 = {dati[1, 2]}
-
 """)
 
 
@@ -61,26 +62,32 @@ Vediamo le 100 query usate per testing performano in assenza di QE.
 A seguire verr\u00e0 riportato un grafico che mostra l'andamento di map e P_5 per le query considerate.
 """)
 
+#Creazione grafici relativi al rapporto metrica ~ query
 st.markdown("### P@5 ~ Id_Q")
+#leggo dati
 query = pl.read_csv("./Data/Eval_Queries/bm25_evalQ.txt", has_header= True)
+# Imposto slider per fare una selezione delle query da mostrare
 selected_p = st.slider("Seleziona il valore di query per p@5", min_value=600, max_value=700, value=(600, 700))
+#Filtro le query selezionate
 filtered_bm = query.filter((query['id_Q'] >= selected_p[0]) & (query['id_Q'] <= selected_p[1]))
-# Creare il grafico per p5~query
+
+# Creo il grafico per p5~query
 chart_p5 = alt.Chart(filtered_bm).mark_point().encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_p)),  # Impostazione dei limiti per l'asse x
     y='p_5'
 )
 
-# Visualizzare il grafico
 st.altair_chart(chart_p5, use_container_width= True)
 
 st.text(""" 
 Il grafico di per s\u00e8 non ci racconta molto da solo, stiamo solo vedendo i risultati per il BM25 senza fare confronti.
 """)
 
-
+#Creazione grafici relativi al rapporto metrica ~ query
 st.markdown("### map ~ Id_Q")
+# Imposto slider per fare una selezione delle query da mostrare
 selected_m = st.slider("Seleziona il valore di query per map", min_value=600, max_value=700, value=(600, 700))
+#Filtro le query selezionate
 filtered_bm = query.filter((query['id_Q'] >= selected_m[0]) & (query['id_Q'] <= selected_m[1]))
 # Creare il grafico per map~query
 chart_map = alt.Chart(filtered_bm).mark_point().encode(

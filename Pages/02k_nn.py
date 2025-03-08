@@ -5,11 +5,8 @@ import streamlit as st
 
 # Imposta il titolo pagina che viene fuori nel browser
 st.set_page_config(
-    page_title="bm25kNN"
+  page_title="bm25kNN"
 )
-
-
-
 
 st.markdown("## Come funziona k-nn ")
 st.markdown("""
@@ -204,15 +201,17 @@ Sono riportate le due configurazioni che si sono distinte maggirmente:
 st.markdown(""" ## Giustificazione scelta parametri""")
 st.markdown("Mostriamo come variano le metriche scelte per l'analisi, ovvero **map** e **P@5**")
 
-
+#Carico i dati relativi ai risultati complessivi
 bm25 = pl.read_csv("./Data/Eval_Test/test_results_bm25_eval.txt", has_header= False, separator="\t")
 kn2507 = pl.read_csv("./Data/Eval_Test/test_results_10_25_07_eval.txt", has_header= False, separator="\t")
 kn10009 = pl.read_csv("./Data/Eval_Test/test_results_10_100_09_eval.txt", has_header= False, separator="\t")
 
+#Seleziono le metriche che mi interessano
 datibm = bm25.filter((pl.col("column_1").str.starts_with("map")) | (pl.col("column_1").str.starts_with("P_5 ")))
 dati07 = kn2507.filter((pl.col("column_1").str.starts_with("map")) | (pl.col("column_1").str.starts_with("P_5 ")))
 dati09 = kn10009.filter((pl.col("column_1").str.starts_with("map")) | (pl.col("column_1").str.starts_with("P_5 ")))
 
+# Rinomino la metrica in modo da capire che metodo e` stato scelto
 datibm[0,0] = "map_BM25"
 datibm[1,0] = "P@5_BM25"
 dati07[0,0] = "map_first"
@@ -220,9 +219,11 @@ dati07[1,0] = "P@5_first"
 dati09[0,0] = "map_second"
 dati09[1,0] = "P@5_second"
 
+#Unisco i 3 dataframe in uno unico cosi da fare il grafico
 df_unito = pl.concat([datibm, dati07, dati09])
+
 df_unito = df_unito.rename({"column_1" : "configurazione"})
-# Creare il grafico per p5~query
+#Creo il grafico che mostra l'andamento delle metriche in base alla configurazione usata.
 chart = alt.Chart(df_unito).mark_bar().encode(
   	x=alt.X('configurazione', title = "Configurazione considerata"),  # Impostazione dei limiti per l'asse x
     y=alt.Y('column_3', title = "valore precisione"),
@@ -231,7 +232,6 @@ chart = alt.Chart(df_unito).mark_bar().encode(
 	title = "Grafico a barre precisione ~ configurazione usata (The higher the better)"
 )
 
-# Visualizzare il grafico
 st.altair_chart(chart, use_container_width= True)
 
 st.markdown("""
@@ -240,27 +240,27 @@ Possiamo inoltre osservare che la **configurazione 1** migliora il map mentre **
 Prima di dire che il metodo funzioni \u00e8 opportuno fare un analisi per ogni query. 
 """)
 
-
-
 st.markdown("# Modello che massimizza P@5")
 st.markdown("""Prendiamo in analisi il modello che massimizza la metrica P@5, ovvero quello con parametri $lambda = 0.9$, $e = 100$ ed $N$ = 10. 
 Valutiamo come le singole query vengono influenzate dall'uso di questo modello e quali migliorano o peggiorano""")
 
-
+#carico dati relativi alle singole query
 querybm25 = pl.read_csv("./Data/Eval_Queries/bm25_evalQ.txt", has_header= True)
 query09 = pl.read_csv("./Data/Eval_Queries/10_100_09_evalQ.txt", has_header= True)
 
-
+#Creo slider per selezionare le query che mi interessano
 selected_x = st.slider("Seleziona il valore di query per p@5", min_value=600, max_value=700, value=(600, 700))
+#Filtro le query in bse allo slider
 filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25['id_Q'] <= selected_x[1]))
 filtered_09 = query09.filter((query09['id_Q'] >= selected_x[0]) & (query09['id_Q'] <= selected_x[1]))
 
+#creo grafico che mostra andamento della metrica p@5 usando il metodo senza QE
 chart_bm = alt.Chart(filtered_bm).mark_point(color = '#FF6347', filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='p_5', 
 		color = "method"
 )
-
+#creo grafico che mostra andamento della metrica p@5 usando il metodo con QE che massimizza P@5
 chart_09 = alt.Chart(filtered_09).mark_point(color = '#32CD32', filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='p_5',
@@ -283,19 +283,22 @@ st.markdown("# Modello che massimizza map")
 st.markdown("""Prendiamo in analisi il modello che massimizza la metrica map, ovvero quello con parametri $lambda = 0.7$, $e = 25$ ed $N$ = 10. 
 Valutiamo come le singole query vengono influenzate dall'uso di questo modello e quali migliorano o peggiorano""")
 
-
+#carico il dataset relativo alle singole query del modello che massimizza map
 query07 = pl.read_csv("./Data/Eval_Queries/10_25_07_evalQ.txt", has_header= True)
 
+#Creo slider per selezioanre query di interesse
 selected_x = st.slider("Seleziona il valore di query per map", min_value=600, max_value=700, value=(600, 700))
+#Filtor le query inbase alle regole dello slider
 filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25['id_Q'] <= selected_x[1]))
 filtered_07 = query07.filter((query07['id_Q'] >= selected_x[0]) & (query07['id_Q'] <= selected_x[1]))
 
+#creo grafico che mostra andamento della metrica mpa usando il metodo senza QE
 chart_bm = alt.Chart(filtered_bm).mark_point(color = '#FF6347', filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='map', 
 		color = "method"
 )
-
+#creo grafico che mostra andamento della metrica map usando il metodo con QE che massimizza map
 chart_07 = alt.Chart(filtered_07).mark_point(color = '#32CD32', filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='map',

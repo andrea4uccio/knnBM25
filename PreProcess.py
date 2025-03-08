@@ -3,14 +3,14 @@ import polars as pl
 # Funzione per rendere i dati tidy
 def clean(filename, method):
   dati = pl.read_csv(filename, separator="\t")
-   # Filtrare i dati per 'metric_name' che è 'map' o 'P_5'
+   # Filtro i dati per $metric_name che è 'map' o 'P_5'
   dati = dati.filter((pl.col("metric_name").str.starts_with("map"))| (pl.col("metric_name").str.starts_with("P_5 ")))
     
-  # Separare i dati in map e p_5 utilizzando gli indici alternati
+  # Separo i dati in map e p_5 utilizzando gli indici alternati
   map_data = dati[::2]  # Ogni seconda riga, iniziando dalla prima
   p_5_data = dati[1::2]  # Ogni seconda riga, iniziando dalla seconda
     
-  # Creare un nuovo dataframe con le colonne desiderate
+  # Creo un nuovo dataframe con le colonne desiderate
   result = pl.DataFrame({
       "id_Q": p_5_data[:, 1],  # La seconda colonna di p_5
       "p_5": p_5_data[:, 2],   # La terza colonna di p_5
@@ -20,7 +20,7 @@ def clean(filename, method):
     
   return result
 
-# Scriviamo il nuovo dataset pulito in un file cosi da averlo sempre pronto
+# Scriviamo il nuovo dataset pulito in un file cosi` da averlo sempre pronto
 
 tidy = clean("Data/Eval_Queries/test_results_10_25_07_evalQ.txt", "10_25_07")
 tidy.write_csv("Data/Eval_Queries/10_25_07_evalQ.txt")

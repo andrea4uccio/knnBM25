@@ -25,7 +25,7 @@ Li useremo entrambi e proveremo a trarre delle conclusioni, fissiamo un valore $
 Si riportano i $p_{value}$ e le conclusioni dei test eseguiti:
 """)
 
-
+#Carico i dati relativi alle singole querty per test di significativita``
 bm25 = pl.read_csv("./Data/Eval_Queries/bm25_evalQ.txt", has_header= True)
 p5 = pl.read_csv("./Data/Eval_Queries/10_100_09_evalQ.txt", has_header= True)
 map = pl.read_csv("./Data/Eval_Queries/10_25_07_evalQ.txt", has_header= True)
