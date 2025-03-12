@@ -48,6 +48,6 @@ L'utilizzo di **uv** consente di eseguire il codice in modo semplice.
      ```bash
      uv run streamlit run intro.py
      ```
-
+Se non compare il menu\` a tendina a sinistra rinominare la cartella `Pages` in `pages`
 ## Analisi
 Nella pagina `intro.py` viene fornita una introduzione al problema e alcuni riferimenti usati.
