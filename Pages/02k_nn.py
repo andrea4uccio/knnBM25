@@ -2,6 +2,11 @@ import altair as alt
 import polars as pl
 import streamlit as st
 
+# Imposto costanti per non avere numeri 
+OFFSET = 601 # imposta offset tra indice e id_Q, sara` immediato quando comparira`
+MIN_SLIDE = 600 # valore minimo per slider
+MAX_SLIDE = 700 # valroe massimo per slider
+
 
 # Imposta il titolo pagina che viene fuori nel browser
 st.set_page_config(
@@ -249,7 +254,7 @@ querybm25 = pl.read_csv("./Data/Eval_Queries/bm25_evalQ.txt", has_header= True)
 query09 = pl.read_csv("./Data/Eval_Queries/10_100_09_evalQ.txt", has_header= True)
 
 #Creo slider per selezionare le query che mi interessano
-selected_x = st.slider("Seleziona il valore di query per p@5", min_value=600, max_value=700, value=(600, 700))
+selected_x = st.slider("Seleziona il valore di query per p@5", min_value=MIN_SLIDE, max_value=MAX_SLIDE, value=(MIN_SLIDE, MAX_SLIDE))
 #Filtro le query in bse allo slider
 filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25['id_Q'] <= selected_x[1]))
 filtered_09 = query09.filter((query09['id_Q'] >= selected_x[0]) & (query09['id_Q'] <= selected_x[1]))
@@ -273,9 +278,27 @@ st.text("""
 Il grafico non \u00e8 molto suggestivo, per\u00f2 possiamo notare che alcune query rimangono invariate, altre invece cambiano sensibilmente.
 """ )
 
+
+# Individuo le query che migliorano e quali peggiorano maggiormente
+q_25 = querybm25
+q_09 = query09
+q_09_merge = q_25.join(q_09, on ="id_Q")
+q_09_merge= q_09_merge.with_columns(
+    (pl.col("p_5_right") - pl.col("p_5")).alias("difference")
+)
+
+
+# Calcola la differenza massima e minima
+max_diff = q_09_merge["difference"].max()
+min_diff = q_09_merge["difference"].min()
+
+# Trovo i punti di massimo e minimo
+max_index = q_09_merge["difference"].arg_max()
+min_index = q_09_merge["difference"].arg_min()
+
 st.markdown(f"""### Prendiamo per esempio le seguenti query:
-- 622: "Price Fixing" con un P@5 senzas QE di {querybm25[21,1]} mentre usando QE otteniamo {query09[21,1]}. Il nostro meteodo ha funzionato egregiamente, anche se questo \u00E8 un caso di esempio dove viene massimizzata la differenza.
-- 626: "Human Stampede" con P@5 senza QE di {querybm25[25,1]}, mentre usando QE P@5 diventa di {query09[25,1]}. Ovvero viene dimezzata la precisione. 
+- {max_index + OFFSET}: P@5 senzas QE di {querybm25[max_index,1]} mentre usando QE otteniamo {query09[max_index,1]}. Il nostro meteodo ha funzionato egregiamente, anche se questo \u00E8 un caso di esempio dove viene massimizzata la differenza.
+- {min_index + OFFSET}: P@5 senza QE di {querybm25[min_index,1]}, mentre usando QE P@5 diventa di {query09[min_index,1]}. Ovvero viene dimezzata la precisione. 
 """)
 
 
@@ -287,7 +310,7 @@ Valutiamo come le singole query vengono influenzate dall'uso di questo modello e
 query07 = pl.read_csv("./Data/Eval_Queries/10_25_07_evalQ.txt", has_header= True)
 
 #Creo slider per selezioanre query di interesse
-selected_x = st.slider("Seleziona il valore di query per map", min_value=600, max_value=700, value=(600, 700))
+selected_x = st.slider("Seleziona il valore di query per map", min_value=MIN_SLIDE, max_value=MAX_SLIDE, value=(MIN_SLIDE, MAX_SLIDE))
 #Filtor le query inbase alle regole dello slider
 filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25['id_Q'] <= selected_x[1]))
 filtered_07 = query07.filter((query07['id_Q'] >= selected_x[0]) & (query07['id_Q'] <= selected_x[1]))
@@ -307,13 +330,29 @@ chart_07 = alt.Chart(filtered_07).mark_point(color = '#32CD32', filled = True).e
 
 st.altair_chart(chart_bm+chart_07, use_container_width= True)
 
+
 st.text("""
 Il grafico non \u00e8 molto suggestivo, per\u00F2 possiamo notare che alcune query rimangono invariate, altre invece cambiano sensibilmente.
 """ )
 
+# Individuo le query che migliorano e quali peggiorano maggiormente
+q_07 = query07
+q_07_merge = q_25.join(q_07, on ="id_Q")
+q_07_merge= q_07_merge.with_columns(
+    (pl.col("map_right") - pl.col("map")).alias("difference")
+)
+
+# Calcola la differenza massima e minima
+max_diff = q_07_merge["difference"].max()
+min_diff = q_07_merge["difference"].min()
+
+# Trovo i punti di massimo e minimo
+max_index = q_07_merge["difference"].arg_max()
+min_index = q_07_merge["difference"].arg_min()
+
 st.markdown(f"""### Prendiamo per esempio le seguenti query:
-- 607: "Human genetic code" con un map senzas QE di {querybm25[6,2]} mentre usando QE otteniamo {query09[6,2]}. Il nostro meteodo ha funzionato egregiamente, anche se questo \u00E8 un caso di esempio dove viene massimizzata la differenza.
-- 626: "Human Stampede" con map senza QE di {querybm25[25,2]}, mentre usando QE mapdiventa di {query09[25,2]}. meno della meta della precisione. 
+- {max_index + OFFSET}: map senza QE di {querybm25[max_index,2]} mentre usando QE otteniamo {query09[max_index,2]}. Il nostro meteodo ha funzionato egregiamente, anche se questo \u00E8 un caso di esempio dove viene massimizzata la differenza.
+- {min_index + OFFSET}: map senza QE di {querybm25[min_index,2]}, mentre usando QE mapdiventa di {query09[min_index,2]}. meno della meta della precisione. 
 """)
 
 
