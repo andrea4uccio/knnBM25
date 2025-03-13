@@ -32,7 +32,7 @@ QUesto sistema sar\u00E0 la base per ottenere dai risultati della query iniziale
 
 st.markdown(" ## k-nn e QE")
 st.markdown("""
-L'approccio che stiamo usando \u00E8 simile alla pseudo-relevance feedback. Nella pseudo-relevance feedback si assume che i documenti in posizione piu alta come rilevanti.
+L'approccio che stiamo usando \u00E8 simile alla pseudo-relevance feedback. Nella pseudo-relevance feedback si assume che i documenti in posizione pi\u00F9 alta come rilevanti.
 L'idea quindi cambia, usiamo un cluster di documenti per trovare documenti dominanti per il set reperito iniziale e ripetutamente fornire i documenti per enfatizzare gli argomenti principali di una query. 
 """)
 
@@ -40,7 +40,7 @@ st.markdown("## Problema")
 st.markdown("""
 I documenti reperiti in posizione alta contengono rumore, se la P@10 \u00E8 0.5, di 10 documenti, 5 sono non rilevanti.
 Il che puo provocare un drift dei risultati delle query che invece di avvicinarsi a documenti rilevanti si puo avvicinare a quelli non rilevanti.
-Trovare il cluster ottimale \u00e8 difficile, quindi useremo una serie di gruppi rilevanti per il feedback permettendo cluster sovrapponibili per i top-retrieved e alimentando ripeturamente i documenti dominantiche appaiono in piu cluster di alto rango ci aspettiamo che QE possa portare a risultati piu precisi.
+Trovare il cluster ottimale \u00e8 difficile, quindi useremo una serie di gruppi rilevanti per il feedback permettendo cluster sovrapponibili per i top-retrieved e alimentando ripeturamente i documenti dominantiche appaiono in pi\u00F9 cluster di alto rango ci aspettiamo che QE possa portare a risultati pi\u00F9 precisi.
 la motivazione dell'utilizzo di cluster deriva dal fatto che i documenti inposizione pi\u00F9 alta hanno un ordinamento "query-oriented" che nono considera la relazione tra documenti.
 Il problema post in precedenza \u00E8 come scegliere i termini di espansione, che devono essere vicini alla quey. Selezionando ripetutamente i documenti dominanti risolviamo questa difficolta.
 """)
@@ -204,7 +204,7 @@ Sono riportate le due configurazioni che si sono distinte maggirmente:
 """)
 
 st.markdown(""" ## Giustificazione scelta parametri""")
-st.markdown("Mostriamo come variano le metriche scelte per l'analisi, ovvero **map** e **P@5**")
+st.markdown("Mostriamo come variano le metriche scelte per l'analisi, cerchiamo in particolare se esiste una configurazione maggiormente predisposta per migliorare **map** o **P@5**")
 
 #Carico i dati relativi ai risultati complessivi
 bm25 = pl.read_csv("./Data/Eval_Test/test_results_bm25_eval.txt", has_header= False, separator="\t")
@@ -212,38 +212,101 @@ kn2507 = pl.read_csv("./Data/Eval_Test/test_results_10_25_07_eval.txt", has_head
 kn10009 = pl.read_csv("./Data/Eval_Test/test_results_10_100_09_eval.txt", has_header= False, separator="\t")
 
 #Seleziono le metriche che mi interessano
-datibm = bm25.filter((pl.col("column_1").str.starts_with("map")) | (pl.col("column_1").str.starts_with("P_5 ")))
-dati07 = kn2507.filter((pl.col("column_1").str.starts_with("map")) | (pl.col("column_1").str.starts_with("P_5 ")))
-dati09 = kn10009.filter((pl.col("column_1").str.starts_with("map")) | (pl.col("column_1").str.starts_with("P_5 ")))
+datibm = bm25.filter((pl.col("column_1").str.starts_with("map"))    |(pl.col("column_1").str.starts_with("P_5 ")))
+dati07 = kn2507.filter((pl.col("column_1").str.starts_with("map"))  |(pl.col("column_1").str.starts_with("P_5 ")))
+dati09 = kn10009.filter((pl.col("column_1").str.starts_with("map")) |(pl.col("column_1").str.starts_with("P_5 ")))
+
+datibm[0,1] = "BM25"
+datibm[1,1] = "BM25"
+dati07[0,1] = "first"
+dati07[1,1] = "first"
+dati09[0,1] = "second"
+dati09[1,1] = "second"
+
+df_unito = pl.concat([datibm, dati07, dati09])
+print(df_unito)
+df = pl.DataFrame({
+  'method' : ["BM25", "first", "second"],
+  'map' : [datibm[0,2], dati07[0,2], dati09[0,2]],
+  'p5' : [datibm[1,2], dati07[1,2], dati09[1,2]]
+})
+
+chart = alt.Chart(df).mark_circle(size=400).encode(
+    x='map',
+    y='p5',
+    color='method',
+    tooltip=['map', 'p5', 'method']
+).properties(
+    title='Scatter plot p@5 ~ map per le configurazioni usate'
+)
+st.altair_chart(chart, use_container_width=True)
+
+st.markdown("""Il grafico a dispersione mostra dei risultati interessanti. In particolare, il miglior risultato si trova nell'angolo in basso a destra, indicando una configurazione ottimale.
+            
+- Il BM25 si posiziona nella parte superiore sinistra del grafico, lontano dalle altre configurazioni. Questo suggerisce che, nel nostro contesto, il BM25 non rappresenta la soluzione migliore rispetto alle altre opzioni esplorate.
+- La prima configurazione mostra un miglioramento del MAP, ma a discapito della P@5, indicando che si sta ottenendo una maggiore rilevanza complessiva, ma con un'accuratezza inferiore nei primi 5 risultati.
+- La seconda configurazione, al contrario, aumenta la P@5, migliorando la precisione nei primi 5 risultati, ma a discapito del MAP, suggerendo che il sistema \u00e8 pi\u00F9 preciso nelle prime posizioni, ma potrebbe sacrificare la qualità complessiva dei risultati.
+
+Nel complesso, entrambe le configurazioni sembrano portare a un miglioramento delle metriche, offrendo alcune speranze che il nuovo metodo possa effettivamente funzionare e produrre risultati migliori rispetto al BM25.""")
+
+
+
+#Seleziono le metriche che mi interessano
+datibm = bm25.filter((pl.col("column_1").str.starts_with("map"))    )
+dati07 = kn2507.filter((pl.col("column_1").str.starts_with("map"))  )
+dati09 = kn10009.filter((pl.col("column_1").str.starts_with("map")) )
 
 # Rinomino la metrica in modo da capire che metodo e` stato scelto
-datibm[0,0] = "map_BM25"
-datibm[1,0] = "P@5_BM25"
-dati07[0,0] = "map_first"
-dati07[1,0] = "P@5_first"
-dati09[0,0] = "map_second"
-dati09[1,0] = "P@5_second"
+datibm[0,0] = "BM25"
+dati07[0,0] = "first"
+dati09[0,0] = "second"
 
 #Unisco i 3 dataframe in uno unico cosi da fare il grafico
 df_unito = pl.concat([datibm, dati07, dati09])
 
 df_unito = df_unito.rename({"column_1" : "configurazione"})
 #Creo il grafico che mostra l'andamento delle metriche in base alla configurazione usata.
-chart = alt.Chart(df_unito).mark_bar().encode(
+chart_map = alt.Chart(df_unito).mark_bar().encode(
   	x=alt.X('configurazione', title = "Configurazione considerata"),  # Impostazione dei limiti per l'asse x
-    y=alt.Y('column_3', title = "valore precisione"),
+    y=alt.Y('column_3', title = "valore map"),
 		color = 'configurazione'		
 ).properties(
-	title = "Grafico a barre precisione ~ configurazione usata (The higher the better)"
+	title = "map ~ configurazione usata (The higher the better)"
 )
 
-st.altair_chart(chart, use_container_width= True)
+st.altair_chart(chart_map, use_container_width= True)
+st.markdown("""Vediamo che tra le configurazioni la prima, **N** = 10, **e** = 25, **$\\lambda$** = 0.7, migliora sensibilmente il **map**""")
 
-st.markdown("""
-Dai grafici notiamo che i risultati relativi a tutte le query nell'insieme di test migliorano rispetto la configurazione senza QE.
-Possiamo inoltre osservare che la **configurazione 1** migliora il map mentre **configurazione 2** migliora la P@5.
-Prima di dire che il metodo funzioni \u00e8 opportuno fare un analisi per ogni query. 
-""")
+
+
+#Seleziono le metriche che mi interessano
+datibm = bm25.filter((pl.col("column_1").str.starts_with("P_5 "))    )
+dati07 = kn2507.filter((pl.col("column_1").str.starts_with("P_5 "))  )
+dati09 = kn10009.filter((pl.col("column_1").str.starts_with("P_5 ")) )
+
+# Rinomino la metrica in modo da capire che metodo e` stato scelto
+datibm[0,0] = "BM25"
+dati07[0,0] = "first"
+dati09[0,0] = "second"
+
+#Unisco i 3 dataframe in uno unico cosi da fare il grafico
+df_unito = pl.concat([datibm, dati07, dati09])
+
+df_unito = df_unito.rename({"column_1" : "configurazione"})
+#Creo il grafico che mostra l'andamento delle metriche in base alla configurazione usata.
+chart_p5 = alt.Chart(df_unito).mark_bar().encode(
+  	x=alt.X('configurazione', title = "Configurazione considerata"),  # Impostazione dei limiti per l'asse x
+    y=alt.Y('column_3', title = "valore P@5"),
+		color = 'configurazione'		
+).properties(
+	title = "P@5 ~ configurazione usata (The higher the better)"
+)
+st.altair_chart(chart_p5, use_container_width= True)
+
+st.markdown("""Vediamo che tra le configurazioni la seconda, **N** = 10, **e** = 100, **$\\lambda$** = 0.9, migliora sensibilmente la P@5""")
+st.markdown(""""In seguito, analizzeremo in dettaglio le due configurazioni, esaminando come le performance relative alle query vengano modificate in base agli aspetti che risultano maggiormente migliorati. Nel caso della prima configurazione, considereremo la metrica **map**, mentre nella seconda ci concentreremo sulla metrica **P@5**. """)
+
+
 
 st.markdown("# Modello che massimizza P@5")
 st.markdown("""Prendiamo in analisi il modello che massimizza la metrica P@5, ovvero quello con parametri $lambda = 0.9$, $e = 100$ ed $N$ = 10. 
@@ -260,16 +323,20 @@ filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25
 filtered_09 = query09.filter((query09['id_Q'] >= selected_x[0]) & (query09['id_Q'] <= selected_x[1]))
 
 #creo grafico che mostra andamento della metrica p@5 usando il metodo senza QE
-chart_bm = alt.Chart(filtered_bm).mark_point(color = '#FF6347', filled = True).encode(
+chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='p_5', 
-		color = "method"
+		color=alt.Color('method', 
+                    scale=alt.Scale(range=['blue', 'yellow']),  # Imposta i colori desiderati
+                    legend=alt.Legend(title='Method'))
 )
 #creo grafico che mostra andamento della metrica p@5 usando il metodo con QE che massimizza P@5
-chart_09 = alt.Chart(filtered_09).mark_point(color = '#32CD32', filled = True).encode(
+chart_09 = alt.Chart(filtered_09).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='p_5',
-		color = "method"
+		color=alt.Color('method', 
+                    scale=alt.Scale(range=['blue', 'yellow']),  # Imposta i colori desiderati
+                    legend=alt.Legend(title='Method'))
 )
 
 st.altair_chart(chart_bm+chart_09, use_container_width= True)
@@ -316,16 +383,20 @@ filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25
 filtered_07 = query07.filter((query07['id_Q'] >= selected_x[0]) & (query07['id_Q'] <= selected_x[1]))
 
 #creo grafico che mostra andamento della metrica mpa usando il metodo senza QE
-chart_bm = alt.Chart(filtered_bm).mark_point(color = '#FF6347', filled = True).encode(
+chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='map', 
-		color = "method"
+		color=alt.Color('method', 
+                    scale=alt.Scale(range=['blue', 'yellow']),  # Imposta i colori desiderati
+                    legend=alt.Legend(title='Method'))
 )
 #creo grafico che mostra andamento della metrica map usando il metodo con QE che massimizza map
-chart_07 = alt.Chart(filtered_07).mark_point(color = '#32CD32', filled = True).encode(
+chart_07 = alt.Chart(filtered_07).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='map',
-		color = "method"
+		color=alt.Color('method', 
+                    scale=alt.Scale(range=['blue', 'yellow']),  # Imposta i colori desiderati
+                    legend=alt.Legend(title='Method'))
 )
 
 st.altair_chart(chart_bm+chart_07, use_container_width= True)
