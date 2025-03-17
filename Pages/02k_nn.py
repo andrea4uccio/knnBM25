@@ -211,10 +211,17 @@ bm25 = pl.read_csv("./Data/Eval_Test/test_results_bm25_eval.txt", has_header= Fa
 kn2507 = pl.read_csv("./Data/Eval_Test/test_results_10_25_07_eval.txt", has_header= False, separator="\t")
 kn10009 = pl.read_csv("./Data/Eval_Test/test_results_10_100_09_eval.txt", has_header= False, separator="\t")
 
+
+
 #Seleziono le metriche che mi interessano
 datibm = bm25.filter((pl.col("column_1").str.starts_with("map"))    |(pl.col("column_1").str.starts_with("P_5 ")))
 dati07 = kn2507.filter((pl.col("column_1").str.starts_with("map"))  |(pl.col("column_1").str.starts_with("P_5 ")))
 dati09 = kn10009.filter((pl.col("column_1").str.starts_with("map")) |(pl.col("column_1").str.starts_with("P_5 ")))
+
+#Converto i risultati in float
+datibm = datibm.with_columns([pl.col('column_3').cast(pl.Float32).alias('column_3')])
+dati07 = dati07.with_columns([pl.col('column_3').cast(pl.Float32).alias('column_3')])
+dati09 = dati09.with_columns([pl.col('column_3').cast(pl.Float32).alias('column_3')])
 
 datibm[0,1] = "BM25"
 datibm[1,1] = "BM25"
@@ -224,15 +231,15 @@ dati09[0,1] = "second"
 dati09[1,1] = "second"
 
 df_unito = pl.concat([datibm, dati07, dati09])
-print(df_unito)
+
 df = pl.DataFrame({
   'method' : ["BM25", "first", "second"],
   'map' : [datibm[0,2], dati07[0,2], dati09[0,2]],
   'p5' : [datibm[1,2], dati07[1,2], dati09[1,2]]
 })
 
-chart = alt.Chart(df).mark_circle(size=400).encode(
-    x='map',
+chart = alt.Chart(df).mark_point(size=100, filled=True).encode(
+   	x=alt.X('map', scale=alt.Scale(domain = [.12, .16])),
     y='p5',
     color='method',
     tooltip=['map', 'p5', 'method']
@@ -241,7 +248,7 @@ chart = alt.Chart(df).mark_circle(size=400).encode(
 )
 st.altair_chart(chart, use_container_width=True)
 
-st.markdown("""Il grafico a dispersione mostra dei risultati interessanti. In particolare, il miglior risultato si trova nell'angolo in basso a destra, indicando una configurazione ottimale.
+st.markdown("""Il grafico a dispersione mostra dei risultati interessanti. In particolare, il miglior risultato si trova nell'angolo in alto a destra, indicando una configurazione ottimale.
             
 - Il BM25 si posiziona nella parte superiore sinistra del grafico, lontano dalle altre configurazioni. Questo suggerisce che, nel nostro contesto, il BM25 non rappresenta la soluzione migliore rispetto alle altre opzioni esplorate.
 - La prima configurazione mostra un miglioramento del MAP, ma a discapito della P@5, indicando che si sta ottenendo una maggiore rilevanza complessiva, ma con un'accuratezza inferiore nei primi 5 risultati.
@@ -327,7 +334,7 @@ chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='p_5', 
 		color=alt.Color('method', 
-                    scale=alt.Scale(range=['blue', 'yellow']),  # Imposta i colori desiderati
+                    scale=alt.Scale(range=['#83C9FF', '#FFABAB']),  # Imposta i colori desiderati
                     legend=alt.Legend(title='Method'))
 )
 #creo grafico che mostra andamento della metrica p@5 usando il metodo con QE che massimizza P@5
@@ -335,7 +342,7 @@ chart_09 = alt.Chart(filtered_09).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='p_5',
 		color=alt.Color('method', 
-                    scale=alt.Scale(range=['blue', 'yellow']),  # Imposta i colori desiderati
+                    scale=alt.Scale(range=['#83C9FF', '#FFABAB']),  # Imposta i colori desiderati
                     legend=alt.Legend(title='Method'))
 )
 
@@ -387,7 +394,7 @@ chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='map', 
 		color=alt.Color('method', 
-                    scale=alt.Scale(range=['blue', 'yellow']),  # Imposta i colori desiderati
+                    scale=alt.Scale(range=['#83C9FF', '#FFABAB']),  # Imposta i colori desiderati
                     legend=alt.Legend(title='Method'))
 )
 #creo grafico che mostra andamento della metrica map usando il metodo con QE che massimizza map
@@ -395,7 +402,7 @@ chart_07 = alt.Chart(filtered_07).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='map',
 		color=alt.Color('method', 
-                    scale=alt.Scale(range=['blue', 'yellow']),  # Imposta i colori desiderati
+                    scale=alt.Scale(range=['#83C9FF', '#FFABAB']),  # Imposta i colori desiderati
                     legend=alt.Legend(title='Method'))
 )
 
