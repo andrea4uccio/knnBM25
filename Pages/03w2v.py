@@ -24,7 +24,7 @@ Il modello può essere addestrato con due architetture principali:
 
 2. Skip-gram: predice il contesto dato una parola centrale.
 
-Per questo lavoro \`e stato scelto il modello skip-gram che sie rivelato miglior per l'accuratezza semantica.
+Per questo lavoro e` stato scelto il modello skip-gram che sie rivelato miglior per l'accuratezza semantica.
             
 Durante l’addestramento, Word2Vec ottimizza i vettori delle parole in modo che quelle che co-occorrono frequentemente siano vicine tra loro nello spazio semantico. Questo consente di catturare relazioni di similarità semantica tra le parole.
 
