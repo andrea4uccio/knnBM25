@@ -28,27 +28,36 @@ Per migliorare il reperimento \u00e8 possibile usare diversi metodi, nel nostro 
 
   
 ## Obiettivi del Progetto
-Questo progetto mostrer\u00e0 le differenze tra il bm25 senza QE e un possibile uso e implementazione del metodo di clustering k nearest neighbours con QE, usando un dataset creato usando Elasticseach come motore di ricerca e trec_eval per fare le valutazioni sulle performance del metodo utilizzato.
-         
+Questo progetto mostrer\u00e0 le differenze tra il bm25 senza QE e tre implementazioni per l'espansione automatica della query: k-NN e Word2Vec; usando un dataset creato dall'uso combinato di Elasticseach, come motore di ricerca, e trec_eval per fare le valutazioni sulle performance del metodo utilizzato.
+La collezione di documenti \u00e8 la ROBUST 2004 che comprende circa mezzo milione di documenti di natura giornalstica.
+            
 Il progetto si suddivide in tre parti:
 
 1. **Descrizione dei metodi usati**: 
          - come funziona il bm25 e il ruolo nel reperimento
          - come funziona QE con k-nn
+         - come funziona QE con w2V
 
-2. **Analisi di risultati caratteristici**: vedremo come hanno risposto le query al metood usato, in confronto al metodo base senza QE.
+
+2. **Analisi di risultati caratteristici**: vedremo come hanno risposto le query al metodo usato, in confronto al metodo base senza QE.
          
 3. **Presentazione dei risultati**: 
          - vedremo se le differenze, qualora presenti, tra i vari metodo proposti siano significative oppure no. 
 
-La Precision at 5 misura la precisione dei primi 5 documenti restituiti dal motore di ricerca per una determinata query.
-La precisione, in generale, \u00e8 definita come la frazione dei documenti rilevanti tra i documenti recuperati, \u00e8 la percentuale di documenti rilevanti tra i primi 5 risultati restituiti.
-            
-La MAP \u00e8 la media dell'Average Precision (AP) calcolata per ogni query in un dataset. 
-L'Average Precision \u00e8 la media della precisione calcolata per ogni posizione in cui \u00e8 stato trovato un documento rilevante.
-La Precision in un dato punto della lista dei risultati \u00e8 definita come la frazione di documenti pertinenti tra tutti i documenti recuperati fino a quella posizione.
-La Average Precision per una query \u00e8 quindi la media della precisione calcolata per ogni documento rilevante che appare nella lista dei risultati restituiti dal motore di ricerca.
-            
+La Precision at 5 (P@5) misura la precisione dei primi 5 documenti restituiti dal motore di ricerca per una determinata query.
+La precisione, in generale, \u00e8 definita come la frazione di documenti rilevanti tra quelli recuperati; P@5 indica quindi la percentuale di documenti rilevanti tra i primi 5 risultati restituiti.
+
+La MAP (Mean Average Precision) \u00e8 la media della Average Precision (AP) calcolata per ogni query in un dataset.
+L'Average Precision \u00e8 la media delle precisioni calcolate per ogni posizione in cui \u00e8 stato trovato un documento rilevante.
+La precisione in un dato punto della lista dei risultati \u00e8 definita come la frazione di documenti pertinenti tra tutti i documenti recuperati fino a quella posizione.
+L'Average Precision per una query \u00e8 quindi la media della precisione calcolata in ciascuna posizione in cui compare un documento rilevante.
+
+La nDCG@10 (Normalized Discounted Cumulative Gain at 10) \u00e8 una metrica che valuta la qualità del ranking dei primi 10 documenti restituiti.
+Tiene conto della rilevanza, non binaria, dei documenti e della loro posizione nella lista dei risultati: un documento rilevante in una posizione pi\u00f2 alta contribuisce di pi\u00f2 al punteggio complessivo.
+La metrica nDCG normalizza il valore ottenuto rispetto al massimo punteggio possibile (DCG ideale), in modo da ottenere un valore compreso tra 0 e 1.
+Un valore di nDCG@10 pari a 1 indica che tutti i documenti rilevanti si trovano nelle posizioni ottimali nei primi 10 risultati.
+
+
 ## Importanza del Progetto
 
 I motori di ricerca non sono importanti solo per trovare pagine internet ma servono anche a molto altro: 
@@ -64,4 +73,6 @@ L'importanza di trovare e portare in alto i documenti rilevanti \u00e8 fondament
 - (Lee, K. S., Croft, W. B., & Allan, J. (2008, July)). [_A cluster-based resampling method for pseudo-relevance feedback._]
 - (Smucker, M. D., Allan, J., & Carterette, B. (2007, November) [_A comparison of statistical significance tests for information retrieval evaluation._]
 - (Massimo Melucci) [_Information Retrieval Macchine e Motori di ricerca_]
+- (Mikolov, T., Sutskever, I., Chen, K., Corrado, G., & Dean, J. (2013, ottobre)) [Distributed representations of words and phrases and their compositionality.]
+- (Mikolov, T., Chen, K., Corrado, G., & Dean, J. (2013, gennaio)) [Efficient estimation of word representations in vector space.]
 """)
