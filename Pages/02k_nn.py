@@ -1,6 +1,8 @@
 import altair as alt
 import polars as pl
 import streamlit as st
+import plotly.graph_objects as go
+
 
 # Imposto costanti per non avere numeri 
 OFFSET = 601 # imposta offset tra indice e id_Q, sara` immediato quando comparira`
@@ -15,319 +17,339 @@ st.set_page_config(
 
 st.markdown("## Come funziona k-nn ")
 st.markdown("""
-Speighiamo in breve il concetto dietro il funzionamento di  k-nn.
-				 
-L'algoritmo di classificazione k-NN (k-nearest neighbors) \u00E8 un metodo di apprendimento supervisionato che assegna una classe a un campione in base alle classi dei suoi k vicini pi\u00F9 prossimi nel dataset di addestramento. Funziona in questo modo:
+L’algoritmo k-nearest neighbors (k-NN) è una tecnica di apprendimento supervisionato che assegna una classe a un campione in base alle etichette dei suoi k vicini più prossimi nel dataset. Il funzionamento si basa sul calcolo della distanza (tipicamente euclidea) tra il punto da classificare e tutti i punti del dataset, sull’identificazione dei k più vicini, e infine sull’assegnazione della classe in base al voto di maggioranza. Il valore di k è un parametro chiave: valori piccoli possono portare a scelte instabili, mentre valori grandi possono introdurre eccessiva generalizzazione.
 
-1. Calcolo della distanza: Per ogni nuovo dato che deve essere classificato, l'algoritmo calcola la distanza tra il punto da classificare e tutti i punti nel dataset di addestramento (di solito usando la distanza euclidea).
-
-2. Identificazione dei vicini: Si selezionano i k punti pi\u00F9 vicini al punto da classificare, dove k \u00E8 un parametro scelto dall'utente.
-
-3. Voto di maggioranza: La classe assegnata al punto da classificare \u00E8 la classe pi\u00F9 frequente tra i k vicini selezionati.
-
-Scelta di k: Il valore di k influisce sul risultato: valori troppo piccoli possono essere sensibili al rumore, mentre valori troppo grandi possono generalizzare troppo e perdere dettagli importanti.
-
-QUesto sistema sar\u00E0 la base per ottenere dai risultati della query iniziale dei descrittori aggiuntivi per fare QE.
+Nel presente lavoro non viene utilizzato k-NN per la classificazione, ma ci si affida all’implementazione NearestNeighbors fornita dalla libreria scikit-learn per individuare i k vicini più prossimi a ciascun elemento. Questa implementazione non esegue un vero e proprio clustering, ma si limita a restituire, per ogni punto dato, gli indici e le distanze rispetto ai suoi k vicini nel dataset di riferimento.
+            
+Questo sistema sar\u00E0 la base per ottenere dai risultati della query iniziale dei descrittori aggiuntivi per fare QE.
 """)
 
-st.markdown(" ## k-nn e QE")
-st.markdown("""
-L'approccio che stiamo usando \u00E8 simile alla pseudo-relevance feedback. Nella pseudo-relevance feedback si assume che i documenti in posizione pi\u00F9 alta come rilevanti.
-L'idea quindi cambia, usiamo un cluster di documenti per trovare documenti dominanti per il set reperito iniziale e ripetutamente fornire i documenti per enfatizzare gli argomenti principali di una query. 
+st.markdown("### Espansione basata su k-NN")
+
+st.write("""
+I documenti che compaiono come vicini in almeno `min_doc_c` casi vengono considerati dominanti.
+Se nessuno soddisfa questo criterio, la query non viene espansa.
+
+Per ogni documento dominante si aggregano i suoi vicini in un *giga-documento*, che viene indicizzato separatamente.
+La query originale viene quindi rieseguita su questo indice, e si seleziona il *giga-documento* più simile.
+Da questo documento si estraggono i termini utili all'espansione della query.
 """)
 
-st.markdown("## Problema")
-st.markdown("""
-I documenti reperiti in posizione alta contengono rumore, se la P@10 \u00E8 0.5, di 10 documenti, 5 sono non rilevanti.
-Il che puo provocare un drift dei risultati delle query che invece di avvicinarsi a documenti rilevanti si puo avvicinare a quelli non rilevanti.
-Trovare il cluster ottimale \u00e8 difficile, quindi useremo una serie di gruppi rilevanti per il feedback permettendo cluster sovrapponibili per i top-retrieved e alimentando ripeturamente i documenti dominantiche appaiono in pi\u00F9 cluster di alto rango ci aspettiamo che QE possa portare a risultati pi\u00F9 precisi.
-la motivazione dell'utilizzo di cluster deriva dal fatto che i documenti inposizione pi\u00F9 alta hanno un ordinamento "query-oriented" che nono considera la relazione tra documenti.
-Il problema post in precedenza \u00E8 come scegliere i termini di espansione, che devono essere vicini alla quey. Selezionando ripetutamente i documenti dominanti risolviamo questa difficolta.
+st.markdown("### Selezione dei termini espansivi")
+
+st.write("""
+Dal *giga-documento* selezionato si calcolano i vettori di termine. Per ogni termine $t$, si assegna uno score TF-IDF
+rispetto all’intera collezione secondo la formula:
 """)
 
-st.markdown("## Funzionamento")
-st.markdown("""
-**Documento dominante** : Assumiamo un documento dominanto per una query quel documento con un ottima rappresentazione dei topics di una qury, ovvero uno con diversi vicini con alta similarit\u00E0. Nel nostro caso di cluster sovrapposti un documento dominante sar\\U00E0 quello che appare in molteplici cluster con rango elevato. Dal documento dominante rilevato possiamo ricavare i temmini di espansioneche reperirira documenti rletivi a tutti i sottitopics.
-1. I documenti vengon o riperiti data una query usando l'API search() di elasticsearch che di base usa il BM25 senza QE
-2. Vengono generati dei cluster di k-nearest vicini per i primi N docuimenti reperiti pr trovare documenti dominanti. 
-3. In k-NN ogni docunmento hja un ruolo centrale nel creare il proprio cluster con k vicini per similarit\u00e0.
-4. Il rango viene deciso da un language model basato su cluster.
-5. I termini di espansione vengono selezionati usando il modello di rilevanza per ogni documento nei top-ranked cluster.			 
+st.latex(r"""
+\text{score}(t) = tf(t) \cdot \log_{10} \left( \frac{N}{df(t)} \right)
+""")
+
+st.write("""
+- $tf(t)$: frequenza del termine nel *giga-documento*  
+- $df(t)$: numero di documenti della collezione in cui compare $t$  
+- $N$: numero totale di documenti nella collezione
+""")
+
+st.write("""
+I termini vengono ordinati per score e vengono selezionati i primi `top_n`.
+In questo metodo ogni termine espansivo riceve un peso fisso $c_0(t_i) = 1$,
+mentre l’interpolazione con i termini originali è controllata solo dal parametro $\\lambda$.
 """)
 
 st.markdown("# Implementazone")
 st.markdown("Di seguito viee riportato il frammento di codice repsonsabile per la QE e l'uso del k-nn. L'implementazione dell'algoritmo di clustering non viene affrontato in qeusto progetto, viene usata l'implementazione presente nel pacchetto __scikit-learn__")
 codice = """
 # Calcola la DTM, fa clustering e crea la query espansa
-# @param server connessione al server ElasticSearch                                   IP
-# @param INDEXNAME nominativo indice sul quale si vuole eseguire la ricerca           IP
-# @param N_collezione numero di documenti indicizzati in $INDEXNAME                   IP
-# @param query_text query originale.                                                  IP
-# @param first_query_size numero di documenti che si vogliono reperire con $querytext IP
-# @param k numero di vicini                                                           IP
-# @param min_occurrences_cluster soglia per determinare documenti dominanti           IP
-# @param e numero di descrittori nella query espansa                                  IP
-# @param Lambda peos da dare ai nuovi descrittori                                     IP
-# @return documenti reperiti dalla query espansa                                      OR
-def QE_kNN(server, INDEXNAME, N_collezione, querytext, first_query_size, k, min_occurrences_cluster, e, Lambda):
+# @param esClient connessione al server ElasticSearch   IP
+# @param indexName nominativo indice		            IP
+# @param querytext query originale.                     IP
+# @param params parametro composto da:                  IP
+#         -  first_ret numero documenti pseudo-rilevanti 
+#         -  n_neighbours numero di vicini, fissato a 5                                                        
+#         -  min_doc_c soglia per documenti dominanti                     
+#         -  top_n numero di descrittori espansivi                               
+#         -  lambda peso da dare ai nuovi descrittori                           
+# @return documenti reperiti dalla query espansa        OR
+def search_QE_knn(esClient, indexName, querytext, params):
 
-  query_original = { 'match': { "_content": querytext } }
-  response = server.search(index=INDEXNAME, query=query_original, size=first_query_size)
-
+  querytext = preprocess(querytext)
+  query_original = {
+  	"size": params.get('first_ret', 10),
+  	"query": {
+  		"match": {
+  			"_content": querytext
+  		}
+  	}
+  }
+  response = esClient.search(index=indexName, 
+                             body=query_original)
   def get_documents(response):
-    return [hit['_source']['_content'] for hit in response['hits']['hits']]
-
-  documents = get_documents(response)
-  vectorizer = TfidfVectorizer(stop_words='english')
-  dtm = vectorizer.fit_transform(documents)
-  # Normalize the DTM
-  dtm_normalized = normalize(dtm, norm='l2')
-
-  neigh = NearestNeighbors(n_neighbors=k, metric="cosine")
-  # Fit the classifier with the entire dataset (note that X should be the whole DataFrame)
+    return [hit['_source']['_content'] 
+           for hit in response['hits']['hits']]
+  
+  documents = get_documents(response) 
+  vectorizer = TfidfVectorizer(preprocessor= preprocess,
+                               tokenizer=str.split,
+                               lowercase=False
+  ) #matrice di ocnteggio token
+  dtm = vectorizer.fit_transform(documents)  #crea la DTM
+  dtm_normalized=normalize(dtm, norm='l2')#Normalizza DTM
+  
+  #cerca i vicini 
+  neigh = NearestNeighbors(
+    n_neighbors=params.get('n_neighbours', 5),
+    metric="cosine")
   neigh.fit(dtm_normalized)
-
-  # calcolo dei cluster stimati
+  
+  #calcolo dei cluster stimati
   test=dtm_normalized
-  # ???? threshold = 0.25 ???
-  fitted_clusters = neigh.kneighbors(test, n_neighbors=k, return_distance=False)
-
-  # calcolo del numero di volte in cui un documento appare in un cluster
-  keys = [i for i in range(0,dtm_normalized.shape[0])]
+  fitted_clusters = neigh.kneighbors(test,
+    n_neighbors=params.get('n_neighbours', 5),
+    return_distance=False
+  )
+  
+  #occorrenze di un documento in un cluster
+  keys = [i for i in range(0, dtm_normalized.shape[0])]
   dominant_docs = dict.fromkeys(keys,0)
   for cluster in fitted_clusters:
     for doc in cluster:
-      dominant_docs[doc] += 1
-
-  # id dei documenti rilevanti
+        dominant_docs[doc] += 1
+  
+  #id dei documenti rilevanti
   def get_dominant_id(doc_freq, criterion):
-    return [key for key, value in doc_freq.items() if value > criterion]
-
-  dominant_ids = get_dominant_id(dominant_docs, min_occurrences_cluster)
-  if not dominant_ids:
-    print("! Nessun documento dominante !")
-    return server.search(index=INDEXNAME, query=query_original, size=10)
-
-  # fusione dei documenti in accordo ai cluster
+    return [key for key, 
+        value in doc_freq.items() if value > criterion]
+  
+  dominant_ids=get_dominant_id(dominant_docs,
+                               params.get('min_doc_c',6)
+                               )
+  if not dominant_ids: #reperimento senza QE
+     print("! Nessun documento dominante !")
+     query_original = {
+       "size": 10,
+       "query": {
+         "match": {
+           "_content": querytext
+         }
+       }
+     }
+     return esClient.search(index=indexName, 
+                            body=query_original)
+  
+  #fusione dei documenti in accordo ai cluster
   giga_docs = []
   for cluster in fitted_clusters[dominant_ids]:
-    cluster_docs = np.array(documents)[cluster]
-    giga_docs.append(" ".join(cluster_docs))
-
-  # Indicizazzione dei cluster
-  Indexname_supporto = "small_index"
-  server.indices.create(index=Indexname_supporto, ignore=400)
+  cluster_docs = np.array(documents)[cluster]
+  giga_docs.append(" ".join(cluster_docs))
+  
+  #Indicizazzione dei cluster
+  indexName_supporto = "small_index"
+  esClient.options(ignore_status=[400])
+    .indices.create(index=indexName_supporto)
+  
   def index_document(this_id, record):
     record = {"id": this_id, "text": record}
-    server.index(index=Indexname_supporto, id=this_id, document=record)
-
+    esClient.index(index=indexName_supporto,
+                   id=this_id, document=record)
+  
   with ThreadPoolExecutor() as executor:
     for this_id, record in enumerate(giga_docs):
       executor.submit(index_document, this_id, record)
-
-  query_cluster = { 'match': { "text": querytext } }
   
+  query_cluster = {'match': {"text": querytext }}
+ 
   def get_first_id(query_dict):
-    sleep(2)
-    return server.search(index=Indexname_supporto, query=query_dict, size=1)["hits"]["hits"]
-
-  #print("Tentativo numero: 1")
+    return esClient.search(index=indexName_supporto,
+                           query=query_dict,
+                           size=1)["hits"]["hits"]
+  
   first_id = get_first_id(query_cluster)
-  #print("len:",len(first_id))
-
-  i = 1
-  while not first_id:
+  
+  i = 0
+  time_sleep = 0
+  while not first_id: #fino a quando ottiene un risultato
     i += 1
-    sleep(i)
-    #print("Tentativo numero:",i)
-    first_id = get_first_id(query_cluster)
-    if i > 10:
-      print(server.search(index=Indexname_supporto, query=query_cluster, size=1)["hits"]["hits"])
+    time_sleep = i/10 
+    if i > 120:
       raise ValueError(f"Query effettuata {i} volte")
-
-  #print("Numero di richieste mandate al server:",i)
+    sleep(time_sleep) # per non sovraccaricare il server
+    first_id = get_first_id(query_cluster)
   first_id = first_id[0]["_id"]
-
-  tv = server.termvectors(index  = Indexname_supporto,         # term vector dall'indice
-                          id     =  first_id,        # per il documento documento
-                          fields = "text",            # con questi campi
-                          term_statistics=True)
-  #pprint(dict(tv)["term_vectors"]["text"]["terms"])
-
+  
+  tv = esClient.termvectors(index = indexName_supporto,  
+                            id = first_id,
+                            fields = "text",
+                            term_statistics=True)
+  
+  #numero di documenti indicizzati
+  N_collezione = esClient.count(index=indexName)['count'] 
+  
   terms = dict(tv)["term_vectors"]["text"]["terms"]
-  tf_idfs = {key: value["term_freq"] * log10(N_collezione / value["doc_freq"]) for key, value in terms.items()}
-  #pprint(tf_idfs)
-
-  top_e = nlargest(e, tf_idfs.items(), key=lambda item: item[1])
-
-  # Define your weighted terms
-  weighted_terms = [{"term": {"_content": {"value": key, "boost": 1*(1-Lambda)}}} for key, value in top_e]
-  weighted_terms.extend([{"term": {"_content": {"value": key, "boost": 1*Lambda}}} for key in querytext.split(" ")])
-  #pprint(weighted_terms)
-
-  # Create the query using function_score
+  
+  #calcola i tf-idf per ogni termine
+  tf_idfs = {key: 
+    value["term_freq"] * log10(
+      N_collezione / value["doc_freq"]
+    ) for key, value in terms.items()}
+  
+  #seleziona i $top_n valori piu grandi
+  top_n = nlargest(params.get('top_n', 25),
+                   tf_idfs.items(), 
+                   key=lambda item: item[1])
+  
+  # Definizione pesi dei nuovi e vecchi termini
+  weighted_terms = [
+   { "term": {
+       "_content": {
+         "value": key,
+           "boost": 
+             (1-params.get('lambda',.7),2)
+       }
+     }
+   } for key, value in top_n]
+  
+  weighted_terms.extend([
+   { "term": {
+       "_content": {
+         "value": key,
+           "boost":
+             1 * params.get('lambda',.7)
+       }
+     }
+    } for key in querytext.split(" ")
+                        ])
+  
+  # query espansa 
   query_expanded = {
-    "query": {
+    "size": 10,
+  	"query": {
       "function_score": {
-        "query": {
-          "bool": {
-            "should": weighted_terms
-          }
-        }
-      }
-    }
+  	    "query": {
+  		  "bool": {
+  		    "should": weighted_terms
+  		  }
+  		}
+  	  }
+  	}
   }
-
-  # Execute the search query
-  qe_response = server.search(index=INDEXNAME, body=query_expanded)
-  #pprint(response)
-  return qe_response
-
+  
+  qe_response = esClient.search(index=indexName,
+                                body=query_expanded)
+  return qe_response	
 """
 st.code(codice, language='python')
 
 st.markdown("# Risultati e parametri")
 st.markdown("""Ci sono stati diversi parametri da ottimizzare:
-  - **N**: numero di documenti dominanti;
-  - **e**: numero di descrittori da estrarre e aggiungere alla query iniziale;
+  - **first_ret**: numero di documenti dominanti;
+  - **min_doc_c**: numero minimo occorrenze per documento dominante;
+  - **top_n**: numero di descrittori da estrarre e aggiungere alla query iniziale;
   - **$\\lambda$**: peso da dare ai nuovi descrittori nella query espansa.
 
-Sono riportate le due configurazioni che si sono distinte maggirmente:
-1. Prima configurazione:
-  - **N** = 10;
-  - **e** = 25;
-  - **$\\lambda$** = 0.7.
-2. Seconda configurazione:
-  - **N** = 10;
-  - **e** = 100;
+Sono riportate le configurazioni che massimizzano il miglioramento di ogni metrica:
+1. map:
+  - **first_ret** = 10;
+  - **min_doc_c** = 4;
+  - **top_n** = 10;
+  - **$\\lambda$** = 0.9.
+            
+2. P@5:
+  - **first_ret** = 50;
+  - **min_doc_c** = 5;
+  - **top_n** = 10;
+  - **$\\lambda$** = 0.9.	
+            
+3. nDCG:
+  - **first_ret** = 10;
+  - **min_doc_c** = 5;
+  - **top_n** = 10;
   - **$\\lambda$** = 0.9.	
 """)
 
 st.markdown(""" ## Giustificazione scelta parametri""")
-st.markdown("Mostriamo come variano le metriche scelte per l'analisi, cerchiamo in particolare se esiste una configurazione maggiormente predisposta per migliorare **map** o **P@5**")
+st.markdown("Mostriamo come variano le metriche scelte per l'analisi, cerchiamo in particolare se esiste una configurazione maggiormente predisposta per migliorare **map**, **P@5** o **nDCG**")
 
 #Carico i dati relativi ai risultati complessivi
-bm25 = pl.read_csv("./Data/Eval_Test/test_results_bm25_eval.txt", has_header= False, separator="\t")
-kn2507 = pl.read_csv("./Data/Eval_Test/test_results_10_25_07_eval.txt", has_header= False, separator="\t")
-kn10009 = pl.read_csv("./Data/Eval_Test/test_results_10_100_09_eval.txt", has_header= False, separator="\t")
+bm25 = pl.read_csv("./Data/EVAL_TEST_Q/base/Eval_Q_QE_base_combined.csv", has_header= True, separator=",")
+
+knn = pl.read_csv("./Data/EVAL_TEST_Q/knn/Eval_Q_QE_knn_combined.csv", has_header= True, separator=",")
 
 
 
-#Seleziono le metriche che mi interessano
-datibm = bm25.filter((pl.col("column_1").str.starts_with("map"))    |(pl.col("column_1").str.starts_with("P_5 ")))
-dati07 = kn2507.filter((pl.col("column_1").str.starts_with("map"))  |(pl.col("column_1").str.starts_with("P_5 ")))
-dati09 = kn10009.filter((pl.col("column_1").str.starts_with("map")) |(pl.col("column_1").str.starts_with("P_5 ")))
+# Calcolo delle medie
+mean_base = bm25[["map", "p_5", "ndcg_10"]].mean()
+mean_knn = knn[["map", "p_5", "ndcg_10"]].mean()
 
-#Converto i risultati in float
-datibm = datibm.with_columns([pl.col('column_3').cast(pl.Float32).alias('column_3')])
-dati07 = dati07.with_columns([pl.col('column_3').cast(pl.Float32).alias('column_3')])
-dati09 = dati09.with_columns([pl.col('column_3').cast(pl.Float32).alias('column_3')])
+# Calcolo delle medie con Polars  float scalari
+map_bm25 = mean_base.select("map").item()
+p5_bm25 = mean_base.select("p_5").item()
+ndcg_bm25 = mean_base.select("ndcg_10").item()
 
-datibm[0,1] = "BM25"
-datibm[1,1] = "BM25"
-dati07[0,1] = "first"
-dati07[1,1] = "first"
-dati09[0,1] = "second"
-dati09[1,1] = "second"
+map_knn = mean_knn.select("map").item()
+p5_knn = mean_knn.select("p_5").item()
+ndcg_knn = mean_knn.select("ndcg_10").item()
 
-df_unito = pl.concat([datibm, dati07, dati09])
+# Dati per Plotly
+methods = ["BM25", "k-NN"]
+maps = [map_bm25, map_knn]
+p5s = [p5_bm25, p5_knn]
+ndcgs = [ndcg_bm25, ndcg_knn]
 
-df = pl.DataFrame({
-  'method' : ["BM25", "first", "second"],
-  'map' : [datibm[0,2], dati07[0,2], dati09[0,2]],
-  'p5' : [datibm[1,2], dati07[1,2], dati09[1,2]]
-})
+fig = go.Figure()
 
-chart = alt.Chart(df).mark_point(size=100, filled=True).encode(
-   	x=alt.X('map', scale=alt.Scale(domain = [.12, .16])),
-    y='p5',
-    color='method',
-    tooltip=['map', 'p5', 'method']
-).properties(
-    title='Scatter plot p@5 ~ map per le configurazioni usate'
+# Aggiunta dei punti
+fig.add_trace(go.Scatter3d(
+    x=maps,
+    y=ndcgs,
+    z=p5s,
+    mode='markers+text',
+    text=methods,
+    textposition="top center",
+    marker=dict(
+        size=8,
+        color=['blue', 'red'],
+        opacity=0.8
+    )
+))
+
+fig.update_layout(
+    scene=dict(
+        xaxis_title='MAP',
+        yaxis_title='nDCG@10',
+        zaxis_title='P@5'
+    ),
+    title="Confronto tra BM25 e k-NN",
+    margin=dict(l=0, r=0, b=0, t=30)
 )
-st.altair_chart(chart, use_container_width=True)
 
-st.markdown("""Il grafico a dispersione mostra dei risultati interessanti. In particolare, il miglior risultato si trova nell'angolo in alto a destra, indicando una configurazione ottimale.
+# Visualizzazione in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+
+
+st.markdown("""Il grafico a dispersione mostra dei risultati interessanti. In particolare, il miglior risultato si trova nell'angolo in alto a destra, verso di noi, indicando una configurazione ottimale.
             
-- Il BM25 si posiziona nella parte superiore sinistra del grafico, lontano dalle altre configurazioni. Questo suggerisce che, nel nostro contesto, il BM25 non rappresenta la soluzione migliore rispetto alle altre opzioni esplorate.
-- La prima configurazione mostra un miglioramento del MAP, ma a discapito della P@5, indicando che si sta ottenendo una maggiore rilevanza complessiva, ma con un'accuratezza inferiore nei primi 5 risultati.
-- La seconda configurazione, al contrario, aumenta la P@5, migliorando la precisione nei primi 5 risultati, ma a discapito del MAP, suggerendo che il sistema \u00e8 pi\u00F9 preciso nelle prime posizioni, ma potrebbe sacrificare la qualità complessiva dei risultati.
-
-Nel complesso, entrambe le configurazioni sembrano portare a un miglioramento delle metriche, offrendo alcune speranze che il nuovo metodo possa effettivamente funzionare e produrre risultati migliori rispetto al BM25.""")
+Il BM25 si posiziona nella parte superiore destra del grafico, lontano dalla configurazione del k-NN. Questo suggerisce che, nel nostro contesto, il BM25  rappresenta la soluzione migliore rispetto al k-NN.
+""")
 
 
+st.markdown("# Andamento metriche per le query")
+st.markdown("""Analizziamo varie configurazioni del modello e valutiamo come le singole query vengono influenzate""")
 
-#Seleziono le metriche che mi interessano
-datibm = bm25.filter((pl.col("column_1").str.starts_with("map"))    )
-dati07 = kn2507.filter((pl.col("column_1").str.starts_with("map"))  )
-dati09 = kn10009.filter((pl.col("column_1").str.starts_with("map")) )
-
-# Rinomino la metrica in modo da capire che metodo e` stato scelto
-datibm[0,0] = "BM25"
-dati07[0,0] = "first"
-dati09[0,0] = "second"
-
-#Unisco i 3 dataframe in uno unico cosi da fare il grafico
-df_unito = pl.concat([datibm, dati07, dati09])
-
-df_unito = df_unito.rename({"column_1" : "configurazione"})
-#Creo il grafico che mostra l'andamento delle metriche in base alla configurazione usata.
-chart_map = alt.Chart(df_unito).mark_bar().encode(
-  	x=alt.X('configurazione', title = "Configurazione considerata"),  # Impostazione dei limiti per l'asse x
-    y=alt.Y('column_3', title = "valore map"),
-		color = 'configurazione'		
-).properties(
-	title = "map ~ configurazione usata (The higher the better)"
-)
-
-st.altair_chart(chart_map, use_container_width= True)
-st.markdown("""Vediamo che tra le configurazioni la prima, **N** = 10, **e** = 25, **$\\lambda$** = 0.7, migliora sensibilmente il **map**""")
-
-
-
-#Seleziono le metriche che mi interessano
-datibm = bm25.filter((pl.col("column_1").str.starts_with("P_5 "))    )
-dati07 = kn2507.filter((pl.col("column_1").str.starts_with("P_5 "))  )
-dati09 = kn10009.filter((pl.col("column_1").str.starts_with("P_5 ")) )
-
-# Rinomino la metrica in modo da capire che metodo e` stato scelto
-datibm[0,0] = "BM25"
-dati07[0,0] = "first"
-dati09[0,0] = "second"
-
-#Unisco i 3 dataframe in uno unico cosi da fare il grafico
-df_unito = pl.concat([datibm, dati07, dati09])
-
-df_unito = df_unito.rename({"column_1" : "configurazione"})
-#Creo il grafico che mostra l'andamento delle metriche in base alla configurazione usata.
-chart_p5 = alt.Chart(df_unito).mark_bar().encode(
-  	x=alt.X('configurazione', title = "Configurazione considerata"),  # Impostazione dei limiti per l'asse x
-    y=alt.Y('column_3', title = "valore P@5"),
-		color = 'configurazione'		
-).properties(
-	title = "P@5 ~ configurazione usata (The higher the better)"
-)
-st.altair_chart(chart_p5, use_container_width= True)
-
-st.markdown("""Vediamo che tra le configurazioni la seconda, **N** = 10, **e** = 100, **$\\lambda$** = 0.9, migliora sensibilmente la P@5""")
-st.markdown(""""In seguito, analizzeremo in dettaglio le due configurazioni, esaminando come le performance relative alle query vengano modificate in base agli aspetti che risultano maggiormente migliorati. Nel caso della prima configurazione, considereremo la metrica **map**, mentre nella seconda ci concentreremo sulla metrica **P@5**. """)
-
-
-
-st.markdown("# Modello che massimizza P@5")
-st.markdown("""Prendiamo in analisi il modello che massimizza la metrica P@5, ovvero quello con parametri $lambda = 0.9$, $e = 100$ ed $N$ = 10. 
-Valutiamo come le singole query vengono influenzate dall'uso di questo modello e quali migliorano o peggiorano""")
-
-#carico dati relativi alle singole query
-querybm25 = pl.read_csv("./Data/Eval_Queries/bm25_evalQ.txt", has_header= True)
-query09 = pl.read_csv("./Data/Eval_Queries/10_100_09_evalQ.txt", has_header= True)
-
+st.markdown("## P@5 ~ Id_Q" "")
 #Creo slider per selezionare le query che mi interessano
 selected_x = st.slider("Seleziona il valore di query per p@5", min_value=MIN_SLIDE, max_value=MAX_SLIDE, value=(MIN_SLIDE, MAX_SLIDE))
+
 #Filtro le query in bse allo slider
-filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25['id_Q'] <= selected_x[1]))
-filtered_09 = query09.filter((query09['id_Q'] >= selected_x[0]) & (query09['id_Q'] <= selected_x[1]))
+filtered_bm = bm25.filter(
+    (pl.col("id_Q") >= selected_x[0]) & (pl.col("id_Q") <= selected_x[1])
+).select(["id_Q", "p_5", "method"])
+
+filtered_knn = knn.filter(
+    (pl.col("id_Q") >= selected_x[0]) & (pl.col("id_Q") <= selected_x[1])
+).select(["id_Q", "p_5", "method"])
 
 #creo grafico che mostra andamento della metrica p@5 usando il metodo senza QE
 chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
@@ -338,7 +360,7 @@ chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
                     legend=alt.Legend(title='Method'))
 )
 #creo grafico che mostra andamento della metrica p@5 usando il metodo con QE che massimizza P@5
-chart_09 = alt.Chart(filtered_09).mark_point(filled = True).encode(
+chart_knn = alt.Chart(filtered_knn).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='p_5',
 		color=alt.Color('method', 
@@ -346,50 +368,51 @@ chart_09 = alt.Chart(filtered_09).mark_point(filled = True).encode(
                     legend=alt.Legend(title='Method'))
 )
 
-st.altair_chart(chart_bm+chart_09, use_container_width= True)
-
-st.text("""
-Il grafico non \u00e8 molto suggestivo, per\u00f2 possiamo notare che alcune query rimangono invariate, altre invece cambiano sensibilmente.
-""" )
+st.altair_chart(chart_bm+chart_knn, use_container_width= True)
 
 
-# Individuo le query che migliorano e quali peggiorano maggiormente
-q_25 = querybm25
-q_09 = query09
-q_09_merge = q_25.join(q_09, on ="id_Q")
-q_09_merge= q_09_merge.with_columns(
-    (pl.col("p_5_right") - pl.col("p_5")).alias("difference")
+# Seleziona solo le colonne di interesse
+q_bm = bm25.select(["id_Q", "p_5"])  
+q_knn = knn.select(["id_Q", "p_5"])    
+
+# Merge tra BM25 e KNN su id_Q
+q_merged = q_bm.join(q_knn, on="id_Q", suffix="_knn")
+
+# Calcolo della differenza KNN - BM25
+q_merged = q_merged.with_columns(
+    (pl.col("p_5_knn") - pl.col("p_5")).alias("difference")
 )
 
-
-# Calcola la differenza massima e minima
-max_diff = q_09_merge["difference"].max()
-min_diff = q_09_merge["difference"].min()
+# Estrazione massimo e minimo miglioramento
+max_diff = q_merged["difference"].max()
+min_diff = q_merged["difference"].min()
 
 # Trovo i punti di massimo e minimo
-max_index = q_09_merge["difference"].arg_max()
-min_index = q_09_merge["difference"].arg_min()
+max_index = q_merged["difference"].arg_max()
+min_index = q_merged["difference"].arg_min()
+
 
 st.markdown(f"""### Prendiamo per esempio le seguenti query:
-- {max_index + OFFSET}: P@5 senzas QE di {querybm25[max_index,1]} mentre usando QE otteniamo {query09[max_index,1]}. Il nostro meteodo ha funzionato egregiamente, anche se questo \u00E8 un caso di esempio dove viene massimizzata la differenza.
-- {min_index + OFFSET}: P@5 senza QE di {querybm25[min_index,1]}, mentre usando QE P@5 diventa di {query09[min_index,1]}. Ovvero viene dimezzata la precisione. 
+- {max_index + OFFSET}: P@5 senzas QE di {bm25[max_index, "p_5"]} mentre usando QE otteniamo {knn[max_index,"p_5"]}. Il nostro meteodo ha funzionato egregiamente, anche se questo \u00E8 un caso di esempio dove viene massimizzata la differenza.
+- {min_index + OFFSET}: P@5 senza QE di {bm25[min_index, "p_5"]}, mentre usando QE P@5 diventa di {knn[min_index, "p_5"]}. Ovvero vengono reperiti zero documenti rilevanti
 """)
 
 
-st.markdown("# Modello che massimizza map")
-st.markdown("""Prendiamo in analisi il modello che massimizza la metrica map, ovvero quello con parametri $lambda = 0.7$, $e = 25$ ed $N$ = 10. 
-Valutiamo come le singole query vengono influenzate dall'uso di questo modello e quali migliorano o peggiorano""")
 
-#carico il dataset relativo alle singole query del modello che massimizza map
-query07 = pl.read_csv("./Data/Eval_Queries/10_25_07_evalQ.txt", has_header= True)
+st.markdown("## MAP ~ Id_Q" "")
+#Creo slider per selezionare le query che mi interessano
+selected_x = st.slider("Seleziona il valore di query per MAP", min_value=MIN_SLIDE, max_value=MAX_SLIDE, value=(MIN_SLIDE, MAX_SLIDE))
 
-#Creo slider per selezioanre query di interesse
-selected_x = st.slider("Seleziona il valore di query per map", min_value=MIN_SLIDE, max_value=MAX_SLIDE, value=(MIN_SLIDE, MAX_SLIDE))
-#Filtor le query inbase alle regole dello slider
-filtered_bm = querybm25.filter((querybm25['id_Q'] >= selected_x[0]) & (querybm25['id_Q'] <= selected_x[1]))
-filtered_07 = query07.filter((query07['id_Q'] >= selected_x[0]) & (query07['id_Q'] <= selected_x[1]))
+#Filtro le query in bse allo slider
+filtered_bm = bm25.filter(
+    (pl.col("id_Q") >= selected_x[0]) & (pl.col("id_Q") <= selected_x[1])
+).select(["id_Q", "map", "method"])
 
-#creo grafico che mostra andamento della metrica mpa usando il metodo senza QE
+filtered_knn = knn.filter(
+    (pl.col("id_Q") >= selected_x[0]) & (pl.col("id_Q") <= selected_x[1])
+).select(["id_Q", "map", "method"])
+
+#creo grafico che mostra andamento della metrica MAP usando il metodo senza QE
 chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='map', 
@@ -397,8 +420,8 @@ chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
                     scale=alt.Scale(range=['#83C9FF', '#FFABAB']),  # Imposta i colori desiderati
                     legend=alt.Legend(title='Method'))
 )
-#creo grafico che mostra andamento della metrica map usando il metodo con QE che massimizza map
-chart_07 = alt.Chart(filtered_07).mark_point(filled = True).encode(
+#creo grafico che mostra andamento della metrica MAP usando il metodo con QE che massimizza MAP
+chart_knn = alt.Chart(filtered_knn).mark_point(filled = True).encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
     y='map',
 		color=alt.Color('method', 
@@ -406,32 +429,93 @@ chart_07 = alt.Chart(filtered_07).mark_point(filled = True).encode(
                     legend=alt.Legend(title='Method'))
 )
 
-st.altair_chart(chart_bm+chart_07, use_container_width= True)
+st.altair_chart(chart_bm+chart_knn, use_container_width= True)
 
 
-st.text("""
-Il grafico non \u00e8 molto suggestivo, per\u00F2 possiamo notare che alcune query rimangono invariate, altre invece cambiano sensibilmente.
-""" )
+# Seleziona solo le colonne di interesse
+q_bm = bm25.select(["id_Q", "map"])  
+q_knn = knn.select(["id_Q", "map"])    
 
-# Individuo le query che migliorano e quali peggiorano maggiormente
-q_07 = query07
-q_07_merge = q_25.join(q_07, on ="id_Q")
-q_07_merge= q_07_merge.with_columns(
-    (pl.col("map_right") - pl.col("map")).alias("difference")
+# Merge tra BM25 e KNN su id_Q
+q_merged = q_bm.join(q_knn, on="id_Q", suffix="_knn")
+
+# Calcolo della differenza KNN - BM25
+q_merged = q_merged.with_columns(
+    (pl.col("map_knn") - pl.col("map")).alias("difference")
 )
 
-# Calcola la differenza massima e minima
-max_diff = q_07_merge["difference"].max()
-min_diff = q_07_merge["difference"].min()
+# Estrazione massimo e minimo miglioramento
+max_diff = q_merged["difference"].max()
+min_diff = q_merged["difference"].min()
 
 # Trovo i punti di massimo e minimo
-max_index = q_07_merge["difference"].arg_max()
-min_index = q_07_merge["difference"].arg_min()
+max_index = q_merged["difference"].arg_max()
+min_index = q_merged["difference"].arg_min()
+
 
 st.markdown(f"""### Prendiamo per esempio le seguenti query:
-- {max_index + OFFSET}: map senza QE di {querybm25[max_index,2]} mentre usando QE otteniamo {query09[max_index,2]}. Il nostro meteodo ha funzionato egregiamente, anche se questo \u00E8 un caso di esempio dove viene massimizzata la differenza.
-- {min_index + OFFSET}: map senza QE di {querybm25[min_index,2]}, mentre usando QE mapdiventa di {query09[min_index,2]}. meno della meta della precisione. 
+- {max_index + OFFSET}: MAP senza QE di {bm25[max_index, "map"]} mentre usando QE otteniamo {knn[max_index,"map"]}. Il nostro meteodo ha funzionato.
+- {min_index + OFFSET}: MAP senza QE di {bm25[min_index, "map"]}, mentre usando QE MAP diventa di {knn[min_index, "map"]}. Ovvero vengono reperiti zero documenti rilevanti ancora una volta.
+""")
+
+st.markdown("## nDCG ~ Id_Q" "")
+#Creo slider per selezionare le query che mi interessano
+selected_x = st.slider("Seleziona il valore di query per nDCG", min_value=MIN_SLIDE, max_value=MAX_SLIDE, value=(MIN_SLIDE, MAX_SLIDE))
+
+#Filtro le query in bse allo slider
+filtered_bm = bm25.filter(
+    (pl.col("id_Q") >= selected_x[0]) & (pl.col("id_Q") <= selected_x[1])
+).select(["id_Q", "ndcg_10", "method"])
+
+filtered_knn = knn.filter(
+    (pl.col("id_Q") >= selected_x[0]) & (pl.col("id_Q") <= selected_x[1])
+).select(["id_Q", "ndcg_10", "method"])
+
+#creo grafico che mostra andamento della metrica nDCG usando il metodo senza QE
+chart_bm = alt.Chart(filtered_bm).mark_point(filled = True).encode(
+  	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
+    y='ndcg_10', 
+		color=alt.Color('method', 
+                    scale=alt.Scale(range=['#83C9FF', '#FFABAB']),  # Imposta i colori desiderati
+                    legend=alt.Legend(title='Method'))
+)
+#creo grafico che mostra andamento della metrica nDCG usando il metodo con QE che massimizza nDCG
+chart_knn = alt.Chart(filtered_knn).mark_point(filled = True).encode(
+  	x=alt.X('id_Q', scale=alt.Scale(domain=selected_x)),  # Impostazione dei limiti per l'asse x
+    y='ndcg_10',
+		color=alt.Color('method', 
+                    scale=alt.Scale(range=['#83C9FF', '#FFABAB']),  # Imposta i colori desiderati
+                    legend=alt.Legend(title='Method'))
+)
+
+st.altair_chart(chart_bm+chart_knn, use_container_width= True)
+
+
+# Seleziona solo le colonne di interesse
+q_bm = bm25.select(["id_Q", "ndcg_10"])  
+q_knn = knn.select(["id_Q", "ndcg_10"])    
+
+# Merge tra BM25 e KNN su id_Q
+q_merged = q_bm.join(q_knn, on="id_Q", suffix="_knn")
+
+# Calcolo della differenza KNN - BM25
+q_merged = q_merged.with_columns(
+    (pl.col("ndcg_10_knn") - pl.col("ndcg_10")).alias("difference")
+)
+
+# Estrazione massimo e minimo miglioramento
+max_diff = q_merged["difference"].max()
+min_diff = q_merged["difference"].min()
+
+# Trovo i punti di massimo e minimo
+max_index = q_merged["difference"].arg_max()
+min_index = q_merged["difference"].arg_min()
+
+
+st.markdown(f"""### Prendiamo per esempio le seguenti query:
+- {max_index + OFFSET}: nDCG senza QE di {bm25[max_index, "ndcg_10"]} mentre usando QE otteniamo {knn[max_index,"ndcg_10"]}. Il metodo ha funzionato.
+- {min_index + OFFSET}: nDCG senza QE di {bm25[min_index, "ndcg_10"]}, mentre usando QE nDCG diventa di {knn[min_index, "ndcg_10"]}. Ovvero vengono reperiti zero documenti rilevanti ancora una volta.
 """)
 
 
-st.markdown("""Si possono fare ulteriori considerazioni sul perch\u00e9 alcune query hanno funzionato meglio di altre ma non \u00E8 l'obbiettivo di questo progetto.""")
+st.text("Notiamo quindi nonostante alcuni miglioramenti considerevoli relativi alle singole query, ce ne sono altrettanti peggiori. E mediamente il metodo peggiora l'efficicacia del reperimento")
