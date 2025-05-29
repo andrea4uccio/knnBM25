@@ -145,7 +145,7 @@ st.markdown("""Possiamo dire che il metodo che implementa l'espansione della que
 st.markdown("""
 I risultati vanno comunque analizzati considerando quanto segue:
 - per il training si \u00e8 semplicemente diviso il dataset in prime 150 come training e ultime 100 come test. Avendo quindi un dataset limitato non \u00e8 detto che sia la soluzione migliore. Implementare la cross validation sarebbe preferibile; 
-- sempre per la fase di training e vista la natura del problema non \u00e8 stato possibile analizzare ogni combinazione possibile per i parametri dei metodi. Una ricerca piu` esaustiva potrebbe rivelare che anche il metodo che implementa k-nn migliora i risultati, magari anche piu di Word2Vec;
+- sempre per la fase di training e vista la natura del problema non \u00e8 stato possibile analizzare ogni combinazione possibile per i parametri dei metodi. Una ricerca pi\u00f2 esaustiva potrebbe rivelare che anche il metodo che implementa k-nn migliora i risultati, magari anche piu di Word2Vec;
 - i tempi di esecuzione non sono spaventosamente lunghi ma le operazioni che fa il calcolatore aumenta, aumentandone cosi l'inefficienza.
             
 Questi sono problemi che possono essere risolti con del tempo a disposizione per il training del modello e magari considerare alcuni parametri per esempio $\\lambda$ fuori dall'insieme da considerare e trattarlo invece come parametro scelto dal programmatore e tenuto fisso per ogni configurazione.""")
