@@ -17,9 +17,9 @@ st.set_page_config(
 
 st.markdown("## Come funziona k-nn ")
 st.markdown("""
-L’algoritmo k-nearest neighbors (k-NN) è una tecnica di apprendimento supervisionato che assegna una classe a un campione in base alle etichette dei suoi k vicini più prossimi nel dataset. Il funzionamento si basa sul calcolo della distanza (tipicamente euclidea) tra il punto da classificare e tutti i punti del dataset, sull’identificazione dei k più vicini, e infine sull’assegnazione della classe in base al voto di maggioranza. Il valore di k è un parametro chiave: valori piccoli possono portare a scelte instabili, mentre valori grandi possono introdurre eccessiva generalizzazione.
+L’algoritmo k-nearest neighbors (k-NN) \u00e8 una tecnica di apprendimento supervisionato che assegna una classe a un campione in base alle etichette dei suoi k vicini pi\u00f2 prossimi nel dataset. Il funzionamento si basa sul calcolo della distanza (tipicamente euclidea) tra il punto da classificare e tutti i punti del dataset, sull’identificazione dei k pi\u00f2 vicini, e infine sull’assegnazione della classe in base al voto di maggioranza. Il valore di k \u00e8 un parametro chiave: valori piccoli possono portare a scelte instabili, mentre valori grandi possono introdurre eccessiva generalizzazione.
 
-Nel presente lavoro non viene utilizzato k-NN per la classificazione, ma ci si affida all’implementazione NearestNeighbors fornita dalla libreria scikit-learn per individuare i k vicini più prossimi a ciascun elemento. Questa implementazione non esegue un vero e proprio clustering, ma si limita a restituire, per ogni punto dato, gli indici e le distanze rispetto ai suoi k vicini nel dataset di riferimento.
+Nel presente lavoro non viene utilizzato k-NN per la classificazione, ma ci si affida all’implementazione NearestNeighbors fornita dalla libreria scikit-learn per individuare i k vicini pi\u00f2 prossimi a ciascun elemento. Questa implementazione non esegue un vero e proprio clustering, ma si limita a restituire, per ogni punto dato, gli indici e le distanze rispetto ai suoi k vicini nel dataset di riferimento.
             
 Questo sistema sar\u00E0 la base per ottenere dai risultati della query iniziale dei descrittori aggiuntivi per fare QE.
 """)
@@ -31,7 +31,7 @@ I documenti che compaiono come vicini in almeno `min_doc_c` casi vengono conside
 Se nessuno soddisfa questo criterio, la query non viene espansa.
 
 Per ogni documento dominante si aggregano i suoi vicini in un *giga-documento*, che viene indicizzato separatamente.
-La query originale viene quindi rieseguita su questo indice, e si seleziona il *giga-documento* più simile.
+La query originale viene quindi rieseguita su questo indice, e si seleziona il *giga-documento* pi\u00f2 simile.
 Da questo documento si estraggono i termini utili all'espansione della query.
 """)
 
@@ -55,7 +55,7 @@ st.write("""
 st.write("""
 I termini vengono ordinati per score e vengono selezionati i primi `top_n`.
 In questo metodo ogni termine espansivo riceve un peso fisso $c_0(t_i) = 1$,
-mentre l’interpolazione con i termini originali è controllata solo dal parametro $\\lambda$.
+mentre l’interpolazione con i termini originali \u00e8 controllata solo dal parametro $\\lambda$.
 """)
 
 st.markdown("# Implementazone")

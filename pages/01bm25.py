@@ -10,26 +10,26 @@ st.set_page_config(
 
 st.title("Cosa \u00e8 il bm25 ")
 st.markdown(r"""
-Il **BM25 (Best Matching 25)** è un algoritmo di ranking ampiamente utilizzato nei sistemi di Information Retrieval, e rappresenta una delle implementazioni più efficaci del modello probabilistico di rilevanza.  
-È adottato di default da Elasticsearch e viene utilizzato per assegnare a ogni documento un punteggio che indica quanto è pertinente rispetto a una determinata query.
+Il **BM25 (Best Matching 25)** \u00e8 un algoritmo di ranking ampiamente utilizzato nei sistemi di Information Retrieval, e rappresenta una delle implementazioni pi\u00f2 efficaci del modello probabilistico di rilevanza.  
+È adottato di default da Elasticsearch e viene utilizzato per assegnare a ogni documento un punteggio che indica quanto \u00e8 pertinente rispetto a una determinata query.
 
 BM25 si basa su due concetti fondamentali:
 
 - **Term Frequency (TF)**: misura quante volte un termine appare in un documento. BM25 applica una funzione di saturazione: l'importanza del termine aumenta con la frequenza, ma in modo decrescente.
-- **Inverse Document Frequency (IDF)**: misura l'importanza del termine su tutta la collezione. I termini rari sono considerati più informativi.
+- **Inverse Document Frequency (IDF)**: misura l'importanza del termine su tutta la collezione. I termini rari sono considerati pi\u00f2 informativi.
 
-Il punteggio BM25 per un termine $t$ nel documento $d$ è definito come:
+Il punteggio BM25 per un termine $t$ nel documento $d$ \u00e8 definito come:
 
 $$
 BM25_{ij} = SAT_{ij} \cdot IDF_j
 $$
 
 Dove:
-- $IDF_j$ è il peso globale del termine $j$, calcolato sull'intera collezione;
-- $SAT_{ij}$ è il termine di saturazione che modula l’effetto della frequenza del termine nel documento $i$.
+- $IDF_j$ \u00e8 il peso globale del termine $j$, calcolato sull'intera collezione;
+- $SAT_{ij}$ \u00e8 il termine di saturazione che modula l’effetto della frequenza del termine nel documento $i$.
 
-La saturazione è controllata da due parametri:
-- $k_1$: regola la sensibilità alla frequenza del termine (tipico valore: 1.2);
+La saturazione \u00e8 controllata da due parametri:
+- $k_1$: regola la sensibilit\u00e0 alla frequenza del termine (tipico valore: 1.2);
 - $b$: regola la normalizzazione rispetto alla lunghezza del documento (tipico valore: 0.75).
 
 Nel presente progetto, i valori di $k_1$ e $b$ non sono stati modificati e corrispondono a quelli predefiniti di Elasticsearch.
@@ -149,5 +149,5 @@ st.altair_chart(chart_ndcg, use_container_width= True)
 
 
 st.text(""" 
-I grafici presenti servono solo a mostrare i risultati della baseline. In tutti i grafici notiamo che ci sono query ce performano meglio e altre che performano peggio; se il nostro metodo alternativo funziona, ci aspettiamo che le query migliorino in termini di precisione. L'obiettivo ideale è che le query con una precisione superiore a una certa soglia rimangano invariate, mentre quelle sotto tale soglia vengano ottimizzate
+I grafici presenti servono solo a mostrare i risultati della baseline. In tutti i grafici notiamo che ci sono query ce performano meglio e altre che performano peggio; se il nostro metodo alternativo funziona, ci aspettiamo che le query migliorino in termini di precisione. L'obiettivo ideale \u00e8 che le query con una precisione superiore a una certa soglia rimangano invariate, mentre quelle sotto tale soglia vengano ottimizzate.
 """)

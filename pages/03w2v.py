@@ -16,7 +16,7 @@ st.set_page_config(
 
 st.markdown("## Come funziona k-nn ")
 st.markdown("""
-L’algoritmo Word2Vec è un modello non supervisionato di tipo predittivo che apprende rappresentazioni vettoriali (embedding) delle parole a partire da un corpus testuale. L’idea di base è che parole che appaiono in contesti simili avranno rappresentazioni simili nello spazio vettoriale.
+L’algoritmo Word2Vec \u00e8 un modello non supervisionato di tipo predittivo che apprende rappresentazioni vettoriali (embedding) delle parole a partire da un corpus testuale. L’idea di base \u00e8 che parole che appaiono in contesti simili avranno rappresentazioni simili nello spazio vettoriale.
 
 Il modello può essere addestrato con due architetture principali:
 
@@ -24,9 +24,9 @@ Il modello può essere addestrato con due architetture principali:
 
 2. Skip-gram: predice il contesto dato una parola centrale.
 
-Per questo lavoro e` stato scelto il modello skip-gram che sie rivelato miglior per l'accuratezza semantica.
+Per questo lavoro \u00e8 stato scelto il modello skip-gram che sie rivelato miglior per l'accuratezza semantica.
             
-Durante l’addestramento, Word2Vec ottimizza i vettori delle parole in modo che quelle che co-occorrono frequentemente siano vicine tra loro nello spazio semantico. Questo consente di catturare relazioni di similarità semantica tra le parole.
+Durante l’addestramento, Word2Vec ottimizza i vettori delle parole in modo che quelle che co-occorrono frequentemente siano vicine tra loro nello spazio semantico. Questo consente di catturare relazioni di similarit\u00e0 semantica tra le parole.
 
 Nel contesto dell'espansione di query, i vettori Word2Vec vengono utilizzati per trovare parole semanticamente vicine ai termini della query originale. Questi termini simili vengono considerati descrittori aggiuntivi che possono migliorare il recupero, ampliando il significato della query originale con termini affini appresi dal modello.
 
@@ -41,13 +41,13 @@ Usiamo i primi documenti ritenuti pseudo-rilevanti, parametro da ottimizzare, pe
 
 st.markdown("## Funzionamento")
 st.markdown("""
-Nel metodo di espansione basato su Word2Vec, il modello viene addestrato localmente per ogni query, utilizzando i documenti recuperati inizialmente tramite BM25. Questa scelta consente di adattare dinamicamente lo spazio semantico alle specificità di ciascuna query, evitando l’uso di un modello globale addestrato su un corpus eterogeneo.
+Nel metodo di espansione basato su Word2Vec, il modello viene addestrato localmente per ogni query, utilizzando i documenti recuperati inizialmente tramite BM25. Questa scelta consente di adattare dinamicamente lo spazio semantico alle specificit\u00e0 di ciascuna query, evitando l’uso di un modello globale addestrato su un corpus eterogeneo.
 
-Una volta indicizzati i documenti e ottenuti i risultati iniziali, il modello Word2Vec viene addestrato sul solo contenuto testuale dei documenti ritenuti pseudo-rilevanti. In questo modo, gli embedding prodotti riflettono la distribuzione locale delle parole nel contesto della query. Per ogni termine della query originale vengono poi individuati i termini più simili nel vettore semantico, secondo la similarità coseno.
+Una volta indicizzati i documenti e ottenuti i risultati iniziali, il modello Word2Vec viene addestrato sul solo contenuto testuale dei documenti ritenuti pseudo-rilevanti. In questo modo, gli embedding prodotti riflettono la distribuzione locale delle parole nel contesto della query. Per ogni termine della query originale vengono poi individuati i termini pi\u00f2 simili nel vettore semantico, secondo la similarit\u00e0 coseno.
 
-I termini selezionati vengono successivamente filtrati per rimuovere eventuali duplicati o parole già presenti nella query, e utilizzati come termini di espansione. L’obiettivo è quello di ampliare la query iniziale con parole semanticamente affini, migliorando il recupero di documenti pertinenti che utilizzano varianti lessicali o sinonimie non presenti nella formulazione originale.
+I termini selezionati vengono successivamente filtrati per rimuovere eventuali duplicati o parole gi\u00e0 presenti nella query, e utilizzati come termini di espansione. L’obiettivo \u00e8 quello di ampliare la query iniziale con parole semanticamente affini, migliorando il recupero di documenti pertinenti che utilizzano varianti lessicali o sinonimie non presenti nella formulazione originale.
 
-L’intero processo si basa sulla capacità del modello Word2Vec di catturare relazioni semantiche tra i termini, sfruttando la co-occorrenza locale nei documenti inizialmente recuperati. Questo approccio si è dimostrato particolarmente efficace nel migliorare la copertura semantica della query e, in molti casi, ha portato a un incremento delle metriche di retrieval, come la MAP, P@5 e la nDCG.
+L’intero processo si basa sulla capacit\u00e0 del modello Word2Vec di catturare relazioni semantiche tra i termini, sfruttando la co-occorrenza locale nei documenti inizialmente recuperati. Questo approccio si \u00e8 dimostrato particolarmente efficace nel migliorare la copertura semantica della query e, in molti casi, ha portato a un incremento delle metriche di retrieval, come la MAP, P@5 e la nDCG.
 """)
 
 st.markdown("# Implementazone")
@@ -152,10 +152,10 @@ st.code(codice, language='python')
 st.markdown("# Risultati e parametri")
 st.markdown("""Abbiamo diversi parametri relativi all'implementazione, un gruppo e responsabile per l'addestramento di Word2Vec e un altro `e relativo al QE. Di seguito sonon elecanti tutti i parametri:
  
-- **vector_size**: dimensione dei vettori di embedding associati ai termini; valori maggiori permettono rappresentazioni semantiche più dettagliate;  
+- **vector_size**: dimensione dei vettori di embedding associati ai termini; valori maggiori permettono rappresentazioni semantiche pi\u00f2 dettagliate;  
 - **window**: ampiezza della finestra di contesto, ovvero quante parole vicine al termine target vengono considerate durante l’apprendimento;  
 - **min_count**: soglia minima di frequenza sotto la quale un termine viene escluso dal vocabolario;  
-- **negative**: definisce il numero di esempi negativi da campionare per ogni esempio positivo durante l’addestramento di Word2Vec. Valori più alti migliorano la discriminazione, ma aumentano il costo computazionale.
+- **negative**: definisce il numero di esempi negativi da campionare per ogni esempio positivo durante l’addestramento di Word2Vec. Valori pi\u00f2 alti migliorano la discriminazione, ma aumentano il costo computazionale.
 - **epochs**: numero di iterazioni complete sul corpus durante l’addestramento del modello.
 - **first_ret**: numero di documenti pseudo-rilevanti da recuperare per effettuare l'espansione  
 - **top_n**: numero di termini descrittori da aggiungere alla query iniziale;  

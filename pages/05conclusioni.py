@@ -23,7 +23,7 @@ st. markdown("""I test che useremo sono *Paired t-test* e *Wilcoxon signed-rank 
              
 Per entrambi i testi l'ipotesi nulla corrisponde a $H_0 = $ medie uguali.
 Li useremo entrambi e proveremo a trarre delle conclusioni, fissiamo un valore $\\alpha$ = 0.05
-Si riportano i $p_{value}$ e le conclusioni dei test eseguiti:
+Si riportano i $p_{{value}}$ e le conclusioni dei test eseguiti:
 """)
 
 #Carico i dati relativi alle singole querty per test di significativita``
@@ -36,104 +36,104 @@ st.markdown("## Analisi MAP")
 
 st.markdown(f"""
             Partiamo con vedere le differenze in media tra la baseline e i metodi proposti. 
-- Metodo che implementa k-NN, la differenza con la baseline e`: {round(
+- Metodo che implementa k-NN, la differenza con la baseline \u00e8: {round(
       -bm25.get_column("map").mean() + knn.get_column("map").mean(), N_DIGIT )}, il metodo peggiora MAP
-- MEtodo che  implementa Word2Vec, la differenza e` : {round(
+- MEtodo che  implementa Word2Vec, la differenza \u00e8 : {round(
       -bm25.get_column("map").mean() + w2v.get_column("map").mean(), N_DIGIT )}, il metodo migliora la MAP.   
 """)
  
 st.markdown("#### Paired t-test")
 st.markdown(f"""
-- metodo che implementa k-nn: p-value = {round(sci.stats.ttest_rel(
+- metodo che implementa k-nn: $p_{{value}}$ = {round(sci.stats.ttest_rel(
     bm25.get_column("map"),
     knn.get_column("map"))[1],N_DIGIT)}. Non rifiuto $H_0$, ho una differenza significativa, il metodo peggiora la metrica;
 
-- metodo che implementa Word2Vec: p-value = {round(sci.stats.ttest_rel(
+- metodo che implementa Word2Vec: $p_{{value}}$ = {round(sci.stats.ttest_rel(
     bm25.get_column("map"),
     w2v.get_column("map")
-  )[1],N_DIGIT)}. La differenza e` positiva, il metodo migliora in modo significativo la metrica.
+  )[1],N_DIGIT)}. La differenza \u00e8 positiva, il metodo migliora in modo significativo la metrica.
 """)
 
 
 st.markdown("#### Wilcoxon")
 st.markdown(f"""
-- metodo che implementa k-nn: p-value = {round(sci.stats.wilcoxon(
+- metodo che implementa k-nn: $p_{{value}}$ = {round(sci.stats.wilcoxon(
     bm25.get_column("map"),
     knn.get_column("map"))[1],N_DIGIT)}. Non rifiuto $H_0$, ho una differenza significativa, il metodo peggiora la metrica;
 
-- metodo che implementa Word2Vec: p-value = {round(sci.stats.wilcoxon(
+- metodo che implementa Word2Vec: $p_{{value}}$ = {round(sci.stats.wilcoxon(
     bm25.get_column("map"),
     w2v.get_column("map")
-  )[1],N_DIGIT)}. La differenza e` positiva, il metodo migliora in modo significativo la metrica.
+  )[1],N_DIGIT)}. La differenza \u00e8 positiva, il metodo migliora in modo significativo la metrica.
 """)
 
 st.markdown("## Analisi P@5")
 st.markdown(f"""
             Partiamo con vedere le differenze in media tra la baseline e i metodi proposti. 
-- Metodo che implementa k-NN, la differenza con la baseline e`: {round(
+- Metodo che implementa k-NN, la differenza con la baseline \u00e8: {round(
       -bm25.get_column("p_5").mean() + knn.get_column("p_5").mean(), N_DIGIT )}, il metodo peggiora p_5
-- MEtodo che  implementa Word2Vec, la differenza e` : {round(
+- MEtodo che  implementa Word2Vec, la differenza \u00e8 : {round(
       -bm25.get_column("p_5").mean() + w2v.get_column("p_5").mean(), N_DIGIT )}, il metodo migliora la p_5.   
 """)
  
 st.markdown("#### Paired t-test")
 st.markdown(f"""
-- metodo che implementa k-nn: p-value = {round(sci.stats.ttest_rel(
+- metodo che implementa k-nn: $p_{{value}}$ = {round(sci.stats.ttest_rel(
     bm25.get_column("p_5"),
     knn.get_column("p_5"))[1],N_DIGIT)}. Non rifiuto $H_0$, ho una differenza significativa, il metodo peggiora la metrica;
 
-- metodo che implementa Word2Vec: p-value = {round(sci.stats.ttest_rel(
+- metodo che implementa Word2Vec: $p_{{value}}$ = {round(sci.stats.ttest_rel(
     bm25.get_column("p_5"),
     w2v.get_column("p_5")
-  )[1],N_DIGIT)}. La differenza e` positiva ma non significativa.
+  )[1],N_DIGIT)}. La differenza \u00e8 positiva ma non significativa.
 """)
 
 
 st.markdown("#### Wilcoxon")
 st.markdown(f"""
-- metodo che implementa k-nn: p-value = {round(sci.stats.wilcoxon(
+- metodo che implementa k-nn: $p_{{value}}$ = {round(sci.stats.wilcoxon(
     bm25.get_column("p_5"),
     knn.get_column("p_5"))[1],N_DIGIT)}. Non rifiuto $H_0$, ho una differenza significativa, il metodo peggiora la metrica;
 
-- metodo che implementa Word2Vec: p-value = {round(sci.stats.wilcoxon(
+- metodo che implementa Word2Vec: $p_{{value}}$ = {round(sci.stats.wilcoxon(
     bm25.get_column("p_5"),
     w2v.get_column("p_5")
-  )[1],N_DIGIT)}. La differenza e` positiva, il metodo migliora la metrica ma non in modo significativo.
+  )[1],N_DIGIT)}. La differenza \u00e8 positiva, il metodo migliora la metrica ma non in modo significativo.
 """)
 
 
 st.markdown("## Analisi nDCG@10")
 st.markdown(f"""
             Partiamo con vedere le differenze in media tra la baseline e i metodi proposti. 
-- Metodo che implementa k-NN, la differenza con la baseline e`: {round(
+- Metodo che implementa k-NN, la differenza con la baseline \u00e8: {round(
       -bm25.get_column("ndcg_10").mean() + knn.get_column("ndcg_10").mean(), N_DIGIT )}, il metodo peggiora nDCG@10
-- MEtodo che  implementa Word2Vec, la differenza e` : {round(
+- MEtodo che  implementa Word2Vec, la differenza \u00e8 : {round(
       -bm25.get_column("ndcg_10").mean() + w2v.get_column("ndcg_10").mean(), N_DIGIT )}, il metodo migliora la nDCG@10.   
 """)
  
 st.markdown("#### Paired t-test")
 st.markdown(f"""
-- metodo che implementa k-nn: p-value = {round(sci.stats.ttest_rel(
+- metodo che implementa k-nn: $p_{{value}}$ = {round(sci.stats.ttest_rel(
     bm25.get_column("ndcg_10"),
     knn.get_column("ndcg_10"))[1],N_DIGIT)}. Non rifiuto $H_0$, ho una differenza significativa, il metodo peggiora la metrica;
 
-- metodo che implementa Word2Vec: p-value = {round(sci.stats.ttest_rel(
+- metodo che implementa Word2Vec: $p_{{value}}$ = {round(sci.stats.ttest_rel(
     bm25.get_column("ndcg_10"),
     w2v.get_column("ndcg_10")
-  )[1],N_DIGIT)}. La differenza e` positiva ma non significativa.
+  )[1],N_DIGIT)}. La differenza \u00e8 positiva ma non significativa.
 """)
 
 
 st.markdown("#### Wilcoxon")
 st.markdown(f"""
-- metodo che implementa k-nn: p-value = {round(sci.stats.wilcoxon(
+- metodo che implementa k-nn: $p_{{value}}$ = {round(sci.stats.wilcoxon(
     bm25.get_column("ndcg_10"),
     knn.get_column("ndcg_10"))[1],N_DIGIT)}. Non rifiuto $H_0$, ho una differenza significativa, il metodo peggiora la metrica;
 
-- metodo che implementa Word2Vec: p-value = {round(sci.stats.wilcoxon(
+- metodo che implementa Word2Vec: $p_{{value}}$ = {round(sci.stats.wilcoxon(
     bm25.get_column("ndcg_10"),
     w2v.get_column("ndcg_10")
-  )[1],N_DIGIT)}. La differenza e` positiva, il metodo migliora la metrica ma non in modo significativo.
+  )[1],N_DIGIT)}. La differenza \u00e8 positiva, il metodo migliora la metrica ma non in modo significativo.
 """)
 
 
