@@ -11,7 +11,7 @@ st.title("Analisi dell'effetto k-nn per reperimento di documenti rilevanti")
 st.markdown(""" ## Introduzione 
 
 L'information retrieval vuole rispondere a un esigenza informativa, ovvero un insieme di circostanze in cui una persona ha un problema da risolvere che richiede delle informazioni importanti, utili o necessarie per essere risolto.
-Questa esigenza \u00e8 vista come uno stato deeficitario chiamato _$\\text{Anomalous State of Knowledge}^1$_
+Questa esigenza \u00e8 vista come uno stato deeficitario chiamato _$\\text{Anomalous State of Knowledge}$_
 Uno degli aspetti da risolvere \u00e8 il reperimento di documenti rilevanti al problema preso in considerazione, nel nostro caso il problema \u00e8 la risposta a una query. 
 Precisiamo che la rilevanza di un documento e la esigenza informativa sono imprescindibili dalla persona in quanto unica a poter dare un giudizio di rilevanza per la sua esigenza. 
  
