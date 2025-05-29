@@ -15,7 +15,7 @@ def load_metric_file(filepath, metric_name):
     df["id_Q"] = df["id_Q"].astype(int)
     return df[["id_Q", metric_name]]
 
-#(exp, knn, baseline, w2v)
+#(knn, base, w2v)
 method_name = "base"
 
 # cartella comune
