@@ -54,8 +54,7 @@ st.write("""
 
 st.write("""
 I termini vengono ordinati per score e vengono selezionati i primi `top_n`.
-In questo metodo ogni termine espansivo riceve un peso fisso $c_0(t_i) = 1$,
-mentre l’interpolazione con i termini originali \u00e8 controllata solo dal parametro $\\lambda$.
+L’interpolazione con i termini originali \u00e8 controllata solo dal parametro $\\lambda$.
 """)
 
 st.markdown("# Implementazone")
@@ -269,7 +268,7 @@ Sono riportate le configurazioni che massimizzano il miglioramento di ogni metri
 """)
 
 st.markdown(""" ## Giustificazione scelta parametri""")
-st.markdown("Mostriamo come variano le metriche scelte per l'analisi, cerchiamo in particolare se esiste una configurazione maggiormente predisposta per migliorare **map**, **P@5** o **nDCG**")
+st.markdown("Mostriamo come variano le metriche scelte per l'analisi, cerchiamo in particolare se esiste una configurazione maggiormente predisposta per migliorare **map**, **P@5** o **nDCG**.")
 
 #Carico i dati relativi ai risultati complessivi
 bm25 = pl.read_csv("./Data/EVAL_TEST_Q/base/Eval_Q_QE_base_combined.csv", has_header= True, separator=",")

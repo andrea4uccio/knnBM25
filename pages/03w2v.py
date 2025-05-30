@@ -254,7 +254,7 @@ fig.update_layout(
 # Visualizzazione in Streamlit
 st.plotly_chart(fig, use_container_width=True)
 
-st.markdown("""Il grafico mostra che il metodo che implementa Word2Vec migliora notevolmente i risultati rispetto alla baseline, presentadosi come ottimo candidato.
+st.markdown("""Il grafico mostra che il metodo che implementa Word2Vec migliora notevolmente i risultati rispetto alla baseline, posizionandosi in alto e destra e verso di noi (piano tridimensionale) si presenta come ottimo candidato.
 """)
 
 st.markdown("# Andamento metriche per le query")

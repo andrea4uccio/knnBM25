@@ -79,7 +79,7 @@ st.markdown("## Risultati delle query")
 
 st.markdown("""
 Vediamo le 100 query usate per testing performano in assenza di QE.
-A seguire verr\u00e0 riportato un grafico che mostra l'andamento di map e P_5 per le query considerate.
+A seguire verranno riportati dei grafici che mostrano l'andamento delle metriche considerate in relazione alle query.
 """)
 
 
@@ -100,7 +100,6 @@ chart_map = alt.Chart(filtered_bm_map).mark_point().encode(
   	x=alt.X('id_Q', scale=alt.Scale(domain=selected_m)),  # Impostazione dei limiti per l'asse x
     y='map'
 )
-
 # Visualizzare il grafico
 st.altair_chart(chart_map, use_container_width= True)
 
@@ -149,5 +148,5 @@ st.altair_chart(chart_ndcg, use_container_width= True)
 
 
 st.text(""" 
-I grafici presenti servono solo a mostrare i risultati della baseline. In tutti i grafici notiamo che ci sono query ce performano meglio e altre che performano peggio; se il nostro metodo alternativo funziona, ci aspettiamo che le query migliorino in termini di precisione. L'obiettivo ideale \u00e8 che le query con una precisione superiore a una certa soglia rimangano invariate, mentre quelle sotto tale soglia vengano ottimizzate.
+I grafici presenti servono solo a mostrare i risultati della baseline. In tutti i grafici notiamo che ci sono query che performano meglio e altre che performano peggio; se il nostro metodo alternativo funziona, ci aspettiamo che le query migliorino in termini di precisione. L'obiettivo ideale \u00e8 che per ogni query si ottengano tutti e solo documenti rilevanti.
 """)
