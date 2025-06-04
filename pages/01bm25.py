@@ -10,7 +10,7 @@ st.set_page_config(
 
 st.title("Cosa \u00e8 il bm25 ")
 st.markdown(r"""
-Il **BM25 (Best Matching 25)** \u00e8 un algoritmo di ranking ampiamente utilizzato nei sistemi di Information Retrieval, e rappresenta una delle implementazioni pi\u00f2 efficaci del modello probabilistico di rilevanza.  
+Il **BM25 (Best Matching 25)**  \u00e8 un algoritmo di ranking ampiamente utilizzato nei sistemi di Information Retrieval, e rappresenta una delle implementazioni pi\u00f2 efficaci del modello probabilistico di rilevanza.  
 È adottato di default da Elasticsearch e viene utilizzato per assegnare a ogni documento un punteggio che indica quanto \u00e8 pertinente rispetto a una determinata query.
 
 BM25 si basa su due concetti fondamentali:

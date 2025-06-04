@@ -16,7 +16,7 @@ Ma le differenze sono significative?
 """)
 
 
-st.markdown("""## Test per significativit\u00e0""")
+st.markdown("""## Test significativit\u00e0""")
 st. markdown("""I test che useremo sono *Paired t-test* e *Wilcoxon signed-rank test*. Entrambi servono a confrontare due gruppi di dati correlati ma si basano su assunti diversi.
 - Paired t-test \u00e8 un test che assume normalit\u00e0 dei dati;
 - Wilcoxon non fa assunzione parametriche sulla distribuzione dei dati.
@@ -30,6 +30,11 @@ Si riportano i $p_{{value}}$ e le conclusioni dei test eseguiti:
 bm25 = pl.read_csv("./Data/EVAL_TEST_Q/base/Eval_Q_QE_base_combined.csv", has_header= True)
 knn = pl.read_csv("./Data/EVAL_TEST_Q/knn/Eval_Q_QE_knn_combined.csv", has_header= True)
 w2v = pl.read_csv("./Data/EVAL_TEST_Q/w2v/Eval_Q_QE_w2v_combined.csv", has_header= True)
+
+st.markdown("""
+            Il t-test richiede che i dati abbiano una distribuzione normale almeno approsimativamente, dal momento che abbiamo un campione numeroso n > 50 per il TCL assumiamo normalita. 
+            """)
+
 
 
 st.markdown("## Analisi MAP")
@@ -78,6 +83,9 @@ st.markdown(f"""
  
 st.markdown("#### Paired t-test")
 st.markdown(f"""
+
+
+            
 - metodo che implementa k-nn: $p_{{value}}$ = {round(sci.stats.ttest_rel(
     bm25.get_column("p_5"),
     knn.get_column("p_5"))[1],N_DIGIT)}. Non rifiuto $H_0$, ho una differenza significativa, il metodo peggiora la metrica;

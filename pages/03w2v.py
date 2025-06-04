@@ -242,11 +242,15 @@ fig.add_trace(go.Scatter3d(
 ))
 
 fig.update_layout(
-    scene=dict(
+
+  scene_camera=dict(
+        eye=dict(x=2.6, y=.7, z=1.5) 
+  ),
+  scene=dict(
         xaxis_title='MAP',
         yaxis_title='nDCG@10',
         zaxis_title='P@5'
-    ),
+  ),
     title="Confronto tra BM25 e w2v",
     margin=dict(l=0, r=0, b=0, t=30)
 )
